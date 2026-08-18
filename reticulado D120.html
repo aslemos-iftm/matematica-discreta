@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Reticulado 3D dos Divisores de 120</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body { margin: 0; background-color: #0f172a; font-family: sans-serif; }
+    #plot { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="plot"></div>
+  <script>
+    const divisors = [];
+    const x = [], y = [], z = [], labels = [];
+    
+    // Gerar os 16 vértices (a, b, c) -> 2^a * 3^b * 5^c
+    for (let a = 0; a <= 3; a++) {
+      for (let b = 0; b <= 1; b++) {
+        for (let c = 0; c <= 1; c++) {
+          const val = Math.pow(2, a) * Math.pow(3, b) * Math.pow(5, c);
+          x.push(a);
+          y.push(b);
+          z.push(c);
+          labels.push(String(val));
+          divisors.push({a, b, c, val});
+        }
+      }
+    }
+
+    // Vértices (Divisores)
+    const nodes = {
+      type: 'scatter3d',
+      mode: 'markers+text',
+      x: x, y: y, z: z,
+      text: labels,
+      textposition: 'top center',
+      marker: { size: 9, color: '#38bdf8' },
+      textfont: { color: '#f8fafc', size: 14 }
+    };
+
+    // Arestas de Cobertura
+    const edgeX = [], edgeY = [], edgeZ = [];
+    for (let i = 0; i < divisors.length; i++) {
+      for (let j = 0; j < divisors.length; j++) {
+        const d1 = divisors[i], d2 = divisors[j];
+        if ((d2.a === d1.a + 1 && d2.b === d1.b && d2.c === d1.c) ||
+            (d2.a === d1.a && d2.b === d1.b + 1 && d2.c === d1.c) ||
+            (d2.a === d1.a && d2.b === d1.b && d2.c === d1.c + 1)) {
+          edgeX.push(d1.a, d2.a, null);
+          edgeY.push(d1.b, d2.b, null);
+          edgeZ.push(d1.c, d2.c, null);
+        }
+      }
+    }
+
+    const edges = {
+      type: 'scatter3d',
+      mode: 'lines',
+      x: edgeX, y: edgeY, z: edgeZ,
+      line: { color: '#94a3b8', width: 4 },
+      hoverinfo: 'none'
+    };
+
+    const layout = {
+      title: { text: 'Reticulado dos Divisores de 120 (2^a × 3^b × 5^c)', font: { color: '#f8fafc' } },
+      scene: {
+        xaxis: { title: 'Expoente de 2 (0..3)', dtick: 1, backgroundcolor: '#1e293b', gridcolor: '#475569' },
+        yaxis: { title: 'Expoente de 3 (0..1)', dtick: 1, backgroundcolor: '#1e293b', gridcolor: '#475569' },
+        zaxis: { title: 'Expoente de 5 (0..1)', dtick: 1, backgroundcolor: '#1e293b', gridcolor: '#475569' }
+      },
+      paper_bgcolor: '#0f172a',
+      plot_bgcolor: '#0f172a'
+    };
+
+    Plotly.newPlot('plot', [edges, nodes], layout);
+  </script>
+</body>
+</html>
+
