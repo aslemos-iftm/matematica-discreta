@@ -225,9 +225,31 @@
   <p>A matemática pura buscou dignidade tornando-se autônoma: não mais serva da natureza, mas <span>ciência de si mesma</span>, obcecada com a forma de seus próprios enunciados.</p>
   <p>E foi exatamente essa clausura que produziu a máquina — e a devolveu ao mundo pela porta dos fundos, mais influente do que jamais fora enquanto linguagem da física.</p>
 </div>
-
+  
 <footer>
-  <p>Prof. André Lemos · IFTM Campus Uberlândia Centro</p>
+  <style>
+    footer .voltar{
+      color:var(--muted);
+      text-decoration:none;
+      border-bottom:1px solid var(--rule);
+      transition:color .16s, border-color .16s;
+    }
+    footer .voltar:hover,
+    footer .voltar:focus-visible{
+      color:var(--amber);
+      border-color:var(--amber);
+    }
+    footer .voltar .seta{
+      display:inline-block;
+      transition:transform .16s;
+    }
+    footer .voltar:hover .seta{transform:translateX(-3px);}
+  </style>
+
+  <p>
+    <a class="voltar" href="index.html"><span class="seta" aria-hidden="true">←</span> Matemática Discreta</a>
+    · Prof. André Lemos · IFTM Campus Uberlândia Centro
+  </p>
 </footer>
 
 </div>
