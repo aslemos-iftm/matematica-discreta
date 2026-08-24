@@ -77,5 +77,30 @@
     Plotly.newPlot('plot', [edges, nodes], layout);
   </script>
 </body>
+  <footer>
+    <style>
+      footer .voltar{
+        color:var(--muted);
+        text-decoration:none;
+        border-bottom:1px solid var(--rule);
+        transition:color .16s, border-color .16s;
+      }
+      footer .voltar:hover,
+      footer .voltar:focus-visible{
+        color:var(--amber);
+        border-color:var(--amber);
+      }
+      footer .voltar .seta{
+        display:inline-block;
+        transition:transform .16s;
+      }
+      footer .voltar:hover .seta{transform:translateX(-3px);}
+    </style>
+  
+    <p>
+      <a class="voltar" href="index.html"><span class="seta" aria-hidden="true">←</span> Matemática Discreta</a>
+      · Prof. André Lemos · IFTM Campus Uberlândia Centro
+    </p>
+  </footer>
 </html>
 
