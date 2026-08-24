@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A máquina newtoniana — Matemática Discreta · IFTM</title>
+<meta name="description" content="Painel: a mecânica de Newton como um circuito de definições mútuas, e o cálculo infinitesimal como instrumento que se confunde com o objeto.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f; --surface:#0d1119; --surface2:#111725;
+    --rule:#1b2230; --text:#e7eaf0; --muted:#868ea2;
+    --amber:#f5a623; --amber-dim:#8a5f16;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif:"IBM Plex Serif", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);
+       font-size:15px;line-height:1.68;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:60rem;margin:0 auto;padding:clamp(2.5rem,8vw,5.5rem) clamp(1.25rem,5vw,2.5rem) 5rem;}
+
+  .eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 1.2rem;}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.1rem,6vw,3.1rem);
+     line-height:1.08;letter-spacing:-.015em;margin:0;}
+  .lead{color:var(--muted);max-width:40rem;margin:1.1rem 0 0;}
+
+  section{margin-top:clamp(3rem,8vw,4.75rem);}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.55rem;line-height:1.25;margin:0 0 .3rem;}
+  .kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 .8rem;}
+  .sub{color:var(--muted);max-width:44rem;margin:0 0 1.8rem;}
+
+  /* fórmulas */
+  .f{font-family:var(--serif);font-style:italic;font-size:1.15rem;color:var(--text);white-space:nowrap;}
+  .f .op{font-style:normal;color:var(--muted);padding:0 .18em;}
+  .f .num{font-style:normal;}
+  .frac{display:inline-block;vertical-align:middle;text-align:center;margin:0 .18em;line-height:1.12;}
+  .frac > span{display:block;font-size:.82em;}
+  .frac > span:first-child{border-bottom:1px solid var(--muted);padding:0 .28em .06em;}
+  .frac > span:last-child{padding:.06em .28em 0;}
+  .big{font-size:1.5rem;}
+
+  /* circuito */
+  .circuito{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.25rem 1rem .5rem;}
+  svg{display:block;width:100%;height:auto;}
+  .nodo{cursor:pointer;}
+  .nodo rect{fill:var(--surface2);stroke:var(--rule);stroke-width:1;transition:stroke .16s,fill .16s;}
+  .nodo:hover rect,.nodo:focus-visible rect{stroke:var(--amber);}
+  .nodo.on rect{stroke:var(--amber);fill:#1a1508;}
+  .nodo .sym{font-family:var(--serif);font-style:italic;font-size:24px;fill:var(--text);}
+  .nodo .cap{font-family:var(--mono);font-size:11px;fill:var(--muted);letter-spacing:.06em;}
+  .nodo.on .sym,.nodo.on .cap{fill:var(--amber);}
+  .aresta{stroke:var(--amber-dim);stroke-width:1.4;fill:none;}
+  .rot{font-family:var(--mono);font-size:11.5px;fill:var(--muted);letter-spacing:.04em;}
+  .param rect{fill:none;stroke:var(--rule);stroke-width:1;stroke-dasharray:3 3;}
+  .param text{font-family:var(--mono);font-size:11px;fill:var(--muted);}
+  .nodo:focus{outline:none;}
+  .nodo:focus-visible rect{stroke:var(--amber);stroke-width:2;}
+
+  .detalhe{border-top:1px solid var(--rule);margin-top:.75rem;padding:1.15rem .25rem .35rem;min-height:8.5rem;}
+  .detalhe .tag{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0 0 .5rem;}
+  .detalhe h3{font-family:var(--serif);font-weight:400;font-size:1.2rem;margin:0 0 .55rem;}
+  .detalhe p{margin:.55rem 0 0;color:var(--muted);font-size:.88rem;max-width:46rem;}
+  .detalhe .f{display:block;margin:.15rem 0 .3rem;}
+
+  /* cartões */
+  .cartoes{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));}
+  .cartao{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.4rem 1.3rem;}
+  .cartao .lei{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0 0 .7rem;}
+  .cartao .f{display:block;margin:0 0 .9rem;}
+  .cartao h3{font-family:var(--serif);font-weight:400;font-size:1.05rem;margin:0 0 .4rem;}
+  .cartao p{margin:0;color:var(--muted);font-size:.85rem;}
+
+  /* escada */
+  .escada{display:grid;gap:0;border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:var(--surface);}
+  .degrau{display:grid;grid-template-columns:5.5rem 1fr;gap:1rem;padding:1.05rem 1.3rem;border-bottom:1px solid var(--rule);align-items:baseline;}
+  .degrau:last-child{border-bottom:0;}
+  .degrau .n{font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:var(--amber);}
+  .degrau p{margin:.35rem 0 0;color:var(--muted);font-size:.85rem;}
+
+  .fecho{margin-top:clamp(3rem,8vw,4.5rem);border-top:1px solid var(--rule);padding-top:2rem;}
+  .fecho p{font-family:var(--serif);font-size:1.22rem;line-height:1.5;max-width:40rem;margin:0;}
+  .fecho span{color:var(--amber);}
+
+  footer{margin-top:3rem;padding-top:1.4rem;border-top:1px solid var(--rule);color:var(--muted);font-size:.76rem;}
+
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">IFTM · Matemática Discreta</p>
+  <h1>A máquina<br>newtoniana</h1>
+  <p class="lead">A mecânica de Newton não é uma lista de fatos sobre o mundo. É um circuito de definições mútuas que, alimentado por um estado inicial, produz o futuro. Este painel percorre esse circuito.</p>
+</header>
+
+<section>
+  <p class="kicker">Painel 1</p>
+  <h2>O circuito das definições</h2>
+  <p class="sub">Nenhuma grandeza aqui é primitiva. Cada uma é definida pelas outras, e o percurso fecha sobre si mesmo. Clique em qualquer nó.</p>
+
+  <div class="circuito">
+    <svg viewBox="0 0 680 330" role="img" aria-label="Circuito fechado: posição gera força pela lei de força, força gera aceleração dividindo pela massa, aceleração integra em velocidade, velocidade integra em posição.">
+
+      <path class="aresta" d="M245 85 H432" marker-end="url(#pta)"/>
+      <path class="aresta" d="M500 115 V225" marker-end="url(#pta)"/>
+      <path class="aresta" d="M435 255 H248" marker-end="url(#pta)"/>
+      <path class="aresta" d="M180 225 V115" marker-end="url(#pta)"/>
+      <defs><marker id="pta" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#8a5f16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+      <text class="rot" x="338" y="72" text-anchor="middle">lei de força  F(r)</text>
+      <text class="rot" x="514" y="174">÷ m   (2ª lei)</text>
+      <text class="rot" x="341" y="280" text-anchor="middle">∫ dt</text>
+      <text class="rot" x="166" y="174" text-anchor="end">∫ dt</text>
+
+      <g class="param">
+        <rect x="288" y="140" width="104" height="52" rx="6"/>
+        <text x="340" y="162" text-anchor="middle">condições</text>
+        <text x="340" y="178" text-anchor="middle">iniciais r₀, v₀</text>
+      </g>
+
+      <g class="nodo on" id="n-r" tabindex="0" role="button" aria-label="posição">
+        <rect x="120" y="55" width="125" height="60" rx="8"/>
+        <text class="sym" x="182" y="86" text-anchor="middle">r</text>
+        <text class="cap" x="182" y="103" text-anchor="middle">POSIÇÃO</text>
+      </g>
+      <g class="nodo" id="n-F" tabindex="0" role="button" aria-label="força">
+        <rect x="435" y="55" width="125" height="60" rx="8"/>
+        <text class="sym" x="497" y="86" text-anchor="middle">F</text>
+        <text class="cap" x="497" y="103" text-anchor="middle">FORÇA</text>
+      </g>
+      <g class="nodo" id="n-a" tabindex="0" role="button" aria-label="aceleração">
+        <rect x="435" y="225" width="125" height="60" rx="8"/>
+        <text class="sym" x="497" y="256" text-anchor="middle">a</text>
+        <text class="cap" x="497" y="273" text-anchor="middle">ACELERAÇÃO</text>
+      </g>
+      <g class="nodo" id="n-v" tabindex="0" role="button" aria-label="velocidade">
+        <rect x="120" y="225" width="125" height="60" rx="8"/>
+        <text class="sym" x="182" y="256" text-anchor="middle">v</text>
+        <text class="cap" x="182" y="273" text-anchor="middle">VELOCIDADE</text>
+      </g>
+    </svg>
+
+    <div class="detalhe" id="detalhe" aria-live="polite"></div>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">Painel 2</p>
+  <h2>As três leis, relidas</h2>
+  <p class="sub">Lidas como enunciados sobre corpos, as leis parecem óbvias ou vazias. Lidas como peças de uma máquina, cada uma tem uma função distinta — e nenhuma delas é "descrever um fato".</p>
+
+  <div class="cartoes">
+    <div class="cartao">
+      <p class="lei">Primeira lei</p>
+      <span class="f">F <span class="op">=</span> 0 <span class="op">⟹</span> v <span class="op">=</span> <span class="num">const.</span></span>
+      <h3>Não é caso particular da segunda</h3>
+      <p>Ela postula que <em>existem</em> referenciais nos quais a segunda lei vale. É uma afirmação sobre o observador, não sobre o corpo. Sem ela, qualquer movimento poderia ser creditado ao referencial, e nenhuma força seria mensurável.</p>
+    </div>
+    <div class="cartao">
+      <p class="lei">Segunda lei</p>
+      <span class="f">F <span class="op">=</span> <span class="frac"><span>dp</span><span>dt</span></span> <span class="op">=</span> m a</span>
+      <h3>É um esquema, não um fato</h3>
+      <p>Sozinha, tem duas incógnitas e nenhuma determinação: <em>F</em> e <em>m</em> se definem uma pela outra. Só ganha conteúdo quando alguém escreve uma lei de força. É a <em>forma</em> da explicação — o molde vazio onde a física entra depois.</p>
+    </div>
+    <div class="cartao">
+      <p class="lei">Terceira lei</p>
+      <span class="f">F<sub>12</sub> <span class="op">=</span> <span class="op">−</span>F<sub>21</sub></span>
+      <h3>É o que autoriza recortar um sistema</h3>
+      <p>Dela decorre que o momento total de um conjunto isolado não muda. É o que legitima traçar uma fronteira e chamar o que está dentro de "sistema". Sem ela, todo cálculo exigiria o universo inteiro.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">Painel 3</p>
+  <h2>O cálculo como matéria pensante</h2>
+  <p class="sub">O infinitesimal não é um instrumento aplicado de fora a um movimento já descrito. Não há descrição pré-matemática da velocidade à qual a derivada venha depois se aplicar: <em>dr/dt</em> não mede a velocidade — define-a. O instrumento e o objeto nascem no mesmo gesto.</p>
+
+  <div class="escada">
+    <div class="degrau">
+      <span class="n">A equação</span>
+      <div>
+        <span class="f big">m <span class="frac"><span>d²r</span><span>dt²</span></span> <span class="op">=</span> F<span class="op">(</span>r, <span class="frac"><span>dr</span><span>dt</span></span>, t<span class="op">)</span></span>
+        <p>A segunda lei, escrita por extenso, é uma equação diferencial de segunda ordem. Toda a mecânica newtoniana é o estudo das soluções dessa equação para diferentes escolhas de F.</p>
+      </div>
+    </div>
+    <div class="degrau">
+      <span class="n">O determinismo</span>
+      <div>
+        <span class="f">r<sub>0</sub>, v<sub>0</sub> <span class="op">⟹</span> r<span class="op">(</span>t<span class="op">)</span> <span class="num">única</span></span>
+        <p>Dadas posição e velocidade iniciais, a solução existe e é única. O determinismo laplaciano não é uma tese metafísica sobre o mundo: é um teorema de existência e unicidade sobre um sistema de equações. A necessidade migrou do cosmos para a matemática.</p>
+      </div>
+    </div>
+    <div class="degrau">
+      <span class="n">A escada</span>
+      <div>
+        <span class="f">a <span class="op">⇄</span> v <span class="op">⇄</span> r</span>
+        <p>Derivando desce-se, integrando sobe-se. As três não são três coisas: são a mesma coisa em três níveis de derivação. E as constantes que aparecem ao integrar são as condições iniciais — a contingência do mundo entra exatamente aí, e em nenhum outro lugar.</p>
+      </div>
+    </div>
+    <div class="degrau">
+      <span class="n">As integrais primeiras</span>
+      <div>
+        <span class="f">E <span class="op">=</span> T <span class="op">+</span> U,<span class="op">&nbsp;</span> <span class="frac"><span>dE</span><span>dt</span></span> <span class="op">=</span> 0</span>
+        <p>A energia não é uma substância que os corpos carregam. É uma constante de integração: a quantidade que a equação deixa invariante ao longo da solução. Conservar-se é uma propriedade da equação, não uma virtude da coisa.</p>
+      </div>
+    </div>
+    <div class="degrau">
+      <span class="n">O programa</span>
+      <div>
+        <span class="f">U <span class="op">=</span> <span class="op">−</span><span class="frac"><span>GMm</span><span>r</span></span> <span class="op">⟹</span> <span class="num">cônicas</span></span>
+        <p>Escolha um potencial, integre, veja o que sai. Da lei do inverso do quadrado saem elipses — e as leis de Kepler deixam de ser regularidades observadas para virar consequências deduzidas. Newton não descreve a órbita: produz a órbita, e a observação passa a servir de conferência.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fecho">
+  <p>A máquina não diz o que as coisas <em>são</em>. Diz como cada uma se calcula a partir das outras — e, com isso, <span>troca a pergunta pela essência pela pergunta pelo próximo instante</span>. É essa troca que a lógica formal levará ao limite, dois séculos depois.</p>
+</div>
+
+<footer>
+  <p>Prof. André Lemos · IFTM Campus Uberlândia Centro</p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var dados = {
+    "n-r": {
+      tag:"Entrada do circuito",
+      titulo:"A posição não se define — escolhe-se",
+      formula:'<span class="f">r <span class="op">=</span> r<span class="op">(</span>t<span class="op">)</span></span>',
+      texto:["A posição é o único termo que a máquina não deriva de nada: é o que se lê no mundo, e o que a solução da equação devolve. Mas mesmo ela depende de uma escolha prévia de origem e de eixos, que a primeira lei ajuda a fixar.",
+             "Note o que já está pressuposto: um espaço onde faça sentido somar deslocamentos, e um tempo que corra parametrizando tudo. Nada disso é fato observado; é a moldura que torna a observação enunciável."]
+    },
+    "n-F": {
+      tag:"Onde a física entra",
+      titulo:"A força é o que a lei de força disser",
+      formula:'<span class="f">F <span class="op">=</span> <span class="op">−</span>∇U<span class="op">(</span>r<span class="op">)</span><span class="op">,&nbsp;&nbsp;</span> F <span class="op">=</span> <span class="op">−</span><span class="frac"><span>GMm</span><span>r²</span></span> r̂</span>',
+      texto:["Este é o único ponto do circuito onde entra alguma informação sobre o mundo particular que se está estudando. Gravitação, mola, atrito: cada uma é uma escolha de F, e cada escolha gera uma mecânica diferente.",
+             "Fora dessa escolha, força é apenas um nome para o que aparece do lado esquerdo da segunda lei. É por isso que Newton pôde declarar que não fingia hipóteses sobre a causa da gravidade: a máquina não precisa saber o que a gravidade é para calcular o que ela faz."]
+    },
+    "n-a": {
+      tag:"O elo da segunda lei",
+      titulo:"A aceleração é a força vista pela massa",
+      formula:'<span class="f">a <span class="op">=</span> <span class="frac"><span>F</span><span>m</span></span> <span class="op">=</span> <span class="frac"><span>d²r</span><span>dt²</span></span></span>',
+      texto:["Aqui está a circularidade que incomodou Mach: a segunda lei define força por massa e aceleração, mas a massa só é medível comparando acelerações produzidas pela mesma força. Um define o outro.",
+             "A saída de Mach foi tomar a razão das acelerações mútuas de dois corpos como definição operacional de massa, e deixar força como termo derivado. A máquina funciona igual — o que muda é qual peça se declara primitiva. Que essa escolha seja livre é o próprio sintoma de que não há metafísica no fundo."]
+    },
+    "n-v": {
+      tag:"O elo do infinitesimal",
+      titulo:"A velocidade é uma razão que só existe no limite",
+      formula:'<span class="f">v <span class="op">=</span> <span class="frac"><span>dr</span><span>dt</span></span> <span class="op">=</span> <span class="num">lim</span><sub>Δt→0</sub> <span class="frac"><span>Δr</span><span>Δt</span></span></span>',
+      texto:["Velocidade instantânea é uma noção que não existe antes do cálculo: num instante isolado nada se move, e num intervalo qualquer o que se tem é uma média. O conceito só se sustenta como limite.",
+             "É o exemplo mais limpo da tese deste painel. O cálculo não descreve um movimento previamente compreendido — ele é a condição para que a frase &ldquo;a velocidade neste instante&rdquo; signifique alguma coisa. Instrumento e objeto são a mesma invenção."]
+    }
+  };
+
+  var alvo = document.getElementById("detalhe");
+  var nos = Array.prototype.slice.call(document.querySelectorAll(".nodo"));
+
+  function mostrar(id){
+    var d = dados[id];
+    if(!d) return;
+    nos.forEach(function(n){ n.classList.toggle("on", n.id === id); });
+    var html = '<p class="tag">' + d.tag + '</p><h3>' + d.titulo + '</h3>' + d.formula;
+    d.texto.forEach(function(p){ html += '<p>' + p + '</p>'; });
+    alvo.innerHTML = html;
+  }
+
+  nos.forEach(function(n){
+    n.addEventListener("click", function(){ mostrar(n.id); });
+    n.addEventListener("keydown", function(e){
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); mostrar(n.id); }
+    });
+  });
+
+  mostrar("n-r");
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A elipse de dois focos — Matemática Discreta · IFTM</title>
+<meta name="description" content="Painel: a resposta da matemática pura à sua captura pela física — matematizar a lógica, logicizar os objetos, e o caminho involuntário até a máquina.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f; --surface:#0d1119; --surface2:#111725;
+    --rule:#1b2230; --text:#e7eaf0; --muted:#868ea2;
+    --amber:#f5a623; --amber-dim:#8a5f16;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif:"IBM Plex Serif", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);
+       font-size:15px;line-height:1.68;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:60rem;margin:0 auto;padding:clamp(2.5rem,8vw,5.5rem) clamp(1.25rem,5vw,2.5rem) 5rem;}
+
+  .eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 1.2rem;}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.1rem,6vw,3.1rem);
+     line-height:1.08;letter-spacing:-.015em;margin:0;}
+  .lead{color:var(--muted);max-width:41rem;margin:1.1rem 0 0;}
+
+  section{margin-top:clamp(3rem,8vw,4.75rem);}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.55rem;line-height:1.25;margin:0 0 .3rem;}
+  .kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 .8rem;}
+  .sub{color:var(--muted);max-width:44rem;margin:0 0 1.8rem;}
+
+  .quadro{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.25rem 1rem .5rem;}
+  svg{display:block;width:100%;height:auto;}
+  .elipse{fill:none;stroke:var(--rule);stroke-width:1.4;}
+  .foco circle{fill:var(--amber);}
+  .foco text{font-family:var(--mono);font-size:11px;fill:var(--amber);letter-spacing:.13em;}
+  .foco .desc{fill:var(--muted);letter-spacing:.04em;}
+  .raio{stroke:var(--amber);stroke-width:1.2;stroke-dasharray:4 4;opacity:0;transition:opacity .18s;}
+  .raio.on{opacity:.85;}
+  .ponto{cursor:pointer;}
+  .ponto circle{fill:var(--surface2);stroke:var(--muted);stroke-width:1.4;transition:stroke .16s,fill .16s;}
+  .ponto:hover circle,.ponto:focus-visible circle{stroke:var(--amber);}
+  .ponto.on circle{fill:var(--amber);stroke:var(--amber);}
+  .ponto text{font-family:var(--mono);font-size:11.5px;fill:var(--muted);letter-spacing:.04em;transition:fill .16s;}
+  .ponto.on text,.ponto:hover text{fill:var(--text);}
+  .ponto:focus{outline:none;}
+  .ponto:focus-visible circle{stroke-width:2.5;}
+
+  .detalhe{border-top:1px solid var(--rule);margin-top:.75rem;padding:1.15rem .25rem .35rem;min-height:9rem;}
+  .detalhe .tag{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0 0 .5rem;}
+  .detalhe h3{font-family:var(--serif);font-weight:400;font-size:1.2rem;margin:0 0 .5rem;}
+  .detalhe p{margin:.55rem 0 0;color:var(--muted);font-size:.88rem;max-width:46rem;}
+
+  .polos{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(19rem,1fr));}
+  .polo{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.5rem 1.4rem;}
+  .polo .marca{font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0 0 .5rem;}
+  .polo h3{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:0 0 .3rem;}
+  .polo .gloss{color:var(--muted);font-size:.85rem;margin:0 0 1.2rem;}
+
+  .par{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;padding:.6rem 0;border-top:1px solid var(--rule);align-items:baseline;}
+  .par .de{font-family:var(--serif);font-size:.98rem;}
+  .par .para{color:var(--muted);font-size:.8rem;}
+  .polo ul{list-style:none;margin:0;padding:0;}
+  .polo li{border-top:1px solid var(--rule);padding:.75rem 0;}
+  .polo li b{font-family:var(--serif);font-weight:400;font-size:.98rem;display:block;color:var(--text);}
+  .polo li span{color:var(--muted);font-size:.8rem;}
+
+  .escada{border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:var(--surface);}
+  .degrau{display:grid;grid-template-columns:6.5rem 1fr;gap:1rem;padding:1.1rem 1.3rem;border-bottom:1px solid var(--rule);align-items:baseline;}
+  .degrau:last-child{border-bottom:0;}
+  .degrau .ano{font-size:.72rem;letter-spacing:.1em;color:var(--amber);}
+  .degrau h4{font-family:var(--serif);font-weight:400;font-size:1.05rem;margin:0;}
+  .degrau p{margin:.35rem 0 0;color:var(--muted);font-size:.85rem;}
+
+  .fecho{margin-top:clamp(3rem,8vw,4.5rem);border-top:1px solid var(--rule);padding-top:2rem;}
+  .fecho p{font-family:var(--serif);font-size:1.22rem;line-height:1.5;max-width:41rem;margin:0 0 1.1rem;}
+  .fecho p:last-child{margin-bottom:0;}
+  .fecho span{color:var(--amber);}
+
+  footer{margin-top:3rem;padding-top:1.4rem;border-top:1px solid var(--rule);color:var(--muted);font-size:.76rem;}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
+  @media (max-width:30rem){.par{grid-template-columns:1fr;gap:.15rem;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">IFTM · Matemática Discreta</p>
+  <h1>A elipse<br>de dois focos</h1>
+  <p class="lead">Capturada pela física como linguagem da natureza, a matemática pura responde tomando a si mesma como objeto. A resposta tem dois centros que se alimentam mutuamente — e produz, sem querer, a ideia de máquina.</p>
+</header>
+
+<section>
+  <p class="kicker">Painel 1</p>
+  <h2>Por que uma elipse, e não um círculo</h2>
+  <p class="sub">Um círculo tem um centro; uma elipse tem dois focos, e cada ponto da curva está determinado pelos dois ao mesmo tempo — a soma das distâncias é constante. Nenhum resultado abaixo pertence a um foco só. Clique em qualquer um.</p>
+
+  <div class="quadro">
+    <svg viewBox="0 0 680 450" role="img" aria-label="Elipse com dois focos, lógico e algébrico, e quatro resultados sobre a curva determinados por ambos.">
+
+      <ellipse class="elipse" cx="340" cy="215" rx="250" ry="165"/>
+
+      <line class="raio" id="raio1" x1="0" y1="0" x2="152" y2="215"/>
+      <line class="raio" id="raio2" x1="0" y1="0" x2="528" y2="215"/>
+
+      <g class="foco">
+        <circle cx="152" cy="215" r="5"/>
+        <text x="152" y="240" text-anchor="middle">FOCO LÓGICO</text>
+        <text class="desc" x="152" y="256" text-anchor="middle">matematizar a lógica</text>
+      </g>
+      <g class="foco">
+        <circle cx="528" cy="215" r="5"/>
+        <text x="528" y="240" text-anchor="middle">FOCO ALGÉBRICO</text>
+        <text class="desc" x="528" y="256" text-anchor="middle">logicizar os objetos</text>
+      </g>
+
+      <g class="ponto on" id="p-boole" tabindex="0" role="button" data-x="197" data-y="80">
+        <circle cx="197" cy="80" r="6"/>
+        <text x="197" y="62" text-anchor="middle">álgebra da lógica</text>
+      </g>
+      <g class="ponto" id="p-hilbert" tabindex="0" role="button" data-x="483" data-y="80">
+        <circle cx="483" cy="80" r="6"/>
+        <text x="483" y="62" text-anchor="middle">método axiomático</text>
+      </g>
+      <g class="ponto" id="p-modelos" tabindex="0" role="button" data-x="197" data-y="350">
+        <circle cx="197" cy="350" r="6"/>
+        <text x="197" y="374" text-anchor="middle">teoria dos modelos</text>
+      </g>
+      <g class="ponto" id="p-meta" tabindex="0" role="button" data-x="483" data-y="350">
+        <circle cx="483" cy="350" r="6"/>
+        <text x="483" y="374" text-anchor="middle">metamatemática</text>
+      </g>
+    </svg>
+
+    <div class="detalhe" id="detalhe" aria-live="polite"></div>
+  </div>
+</section>
+
+<section>
+  <p class="kicker">Painel 2</p>
+  <h2>Os dois focos</h2>
+  <p class="sub">Um traz a lógica filosófica para dentro da matemática. O outro leva a exigência lógica para dentro de todo objeto matemático. São movimentos opostos que se encontram.</p>
+
+  <div class="polos">
+
+    <div class="polo">
+      <p class="marca">Foco I</p>
+      <h3>Matematizar a lógica</h3>
+      <p class="gloss">Noções herdadas de Aristóteles, dos escolásticos e de Kant recebem, uma a uma, uma contrapartida matemática. O que era categoria filosófica vira objeto manipulável.</p>
+
+      <div class="par"><span class="de">proposição</span><span class="para">fórmula bem formada de uma linguagem definida por regras</span></div>
+      <div class="par"><span class="de">sentença</span><span class="para">cadeia finita de símbolos, sem variáveis livres</span></div>
+      <div class="par"><span class="de">inferência</span><span class="para">relação entre cadeias, verificável sem entender o assunto</span></div>
+      <div class="par"><span class="de">verdade</span><span class="para">satisfação numa estrutura — relativa a um modelo, não absoluta</span></div>
+      <div class="par"><span class="de">definição</span><span class="para">abreviação eliminável, sujeita a critério de não-criatividade</span></div>
+      <div class="par"><span class="de">axioma</span><span class="para">linha inicial de uma derivação, sem privilégio epistêmico</span></div>
+      <div class="par"><span class="de">demonstração</span><span class="para">sequência finita cuja correção se confere passo a passo</span></div>
+    </div>
+
+    <div class="polo">
+      <p class="marca">Foco II</p>
+      <h3>Logicizar os objetos</h3>
+      <p class="gloss">No sentido inverso, os objetos da matemática perdem a natureza e ganham apenas posição. Uma disciplina formal intencional, voltada para si mesma, que já não pergunta o que as coisas são.</p>
+
+      <ul>
+        <li><b>Definição implícita</b><span>Os axiomas não descrevem objetos previamente dados: eles os instituem. Um grupo é qualquer coisa que satisfaça os axiomas de grupo — e nada mais se pode dizer dele.</span></li>
+        <li><b>A indiferença de Hilbert</b><span>Se a axiomática está correta, deve-se poder dizer “mesas, cadeiras e canecas de cerveja” no lugar de “pontos, retas e planos”. O conteúdo intuitivo é ornamento.</span></li>
+        <li><b>Isomorfismo como identidade</b><span>Dois objetos indistinguíveis estruturalmente são o mesmo objeto. A identidade deixa de ser substancial e passa a ser posicional.</span></li>
+        <li><b>Estrutura antes de objeto</b><span>De Dedekind a Noether e a Bourbaki, o que se estuda não são números ou figuras, mas os tipos de arranjo que qualquer domínio pode exibir.</span></li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <p class="kicker">Painel 3</p>
+  <h2>Como a elipse produz a máquina</h2>
+  <p class="sub">Nenhum dos passos abaixo foi dado pensando em máquinas — nenhuma existia. A mecanização aparece como consequência lógica de exigir que “seguir uma regra” tenha sentido matemático preciso.</p>
+
+  <div class="escada">
+    <div class="degrau">
+      <span class="ano">1879</span>
+      <div>
+        <h4>A inferência vira sintaxe</h4>
+        <p>No <em>Begriffsschrift</em>, Frege escreve regras que operam sobre a forma das expressões, não sobre o que elas dizem. Pela primeira vez, verificar uma prova não exige compreendê-la.</p>
+      </div>
+    </div>
+    <div class="degrau">
+      <span class="ano">1899</span>
+      <div>
+        <h4>O objeto vira posição</h4>
+        <p>Hilbert reescreve a geometria sem apelo à intuição espacial. Os termos primitivos não significam nada; significam apenas o que os axiomas lhes permitem fazer.</p>
+      </div>
+    </div>
+    <div class="degrau">
+      <span class="ano">1922</span>
+      <div>
+        <h4>A demonstração vira objeto</h4>
+        <p>A metamatemática de Hilbert toma as próprias provas como material de estudo matemático. É o gesto decisivo: um sistema formal passa a ser algo sobre o que se calcula, e a elipse se fecha.</p>
+      </div>
+    </div>
+    <div class="degrau">
+      <span class="ano">1928</span>
+      <div>
+        <h4>A pergunta que exige a máquina</h4>
+        <p>O <em>Entscheidungsproblem</em>: existe um procedimento que decida, para toda fórmula, se ela é demonstrável? Para respondê-lo — em qualquer direção — é preciso primeiro definir o que conta como procedimento.</p>
+      </div>
+    </div>
+    <div class="degrau">
+      <span class="ano">1936</span>
+      <div>
+        <h4>A resposta negativa inventa a computação</h4>
+        <p>Church e Turing mostram que tal procedimento não existe. Mas para provar a inexistência, Turing teve de construir um modelo preciso do que uma máquina pode fazer — e essa construção, feita para dizer não, é o computador.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fecho">
+  <p>A matemática pura buscou dignidade tornando-se autônoma: não mais serva da natureza, mas <span>ciência de si mesma</span>, obcecada com a forma de seus próprios enunciados.</p>
+  <p>E foi exatamente essa clausura que produziu a máquina — e a devolveu ao mundo pela porta dos fundos, mais influente do que jamais fora enquanto linguagem da física.</p>
+</div>
+
+<footer>
+  <p>Prof. André Lemos · IFTM Campus Uberlândia Centro</p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var dados = {
+    "p-boole": {
+      tag:"Do foco lógico para o algébrico",
+      titulo:"Álgebra da lógica",
+      texto:["Boole trata as leis do pensamento como se fossem equações: conjunção vira produto, disjunção vira soma, e a idempotência x² = x caracteriza o universo de valores. A lógica ganha uma estrutura algébrica antes mesmo de ganhar uma sintaxe rigorosa.",
+             "O caminho se completa com Lindenbaum e Tarski: as fórmulas de um sistema, quocientadas pela equivalência demonstrável, formam uma álgebra. Provar algo passa a ser uma afirmação sobre elementos de uma estrutura — o foco lógico se deixa estudar pelas ferramentas do foco algébrico."]
+    },
+    "p-hilbert": {
+      tag:"Do foco algébrico para o lógico",
+      titulo:"Método axiomático",
+      texto:["Se os objetos não têm natureza própria e são apenas o que os axiomas dizem, então tudo depende de que os axiomas estejam formulados com precisão absoluta. A abstração algébrica cria, por necessidade interna, uma demanda por rigor lógico que nada tem de filosófica.",
+             "É por isso que Hilbert precisa perguntar se um conjunto de axiomas é consistente, independente e completo. São perguntas lógicas nascidas de uma exigência algébrica — o segundo foco convocando o primeiro."]
+    },
+    "p-modelos": {
+      tag:"Os dois focos ao mesmo tempo",
+      titulo:"Teoria dos modelos",
+      texto:["Uma linguagem formal de um lado, uma estrutura algébrica do outro, e entre elas a relação de satisfação. A teoria dos modelos não é aplicação de um foco ao outro: é o campo que só existe porque os dois existem.",
+             "A definição tarskiana de verdade é o exemplo mais nítido da elipse funcionando. Verdade deixa de ser correspondência com o mundo e passa a ser uma relação entre uma sentença e uma estrutura — noção herdada da filosofia, tratada com instrumentos de álgebra."]
+    },
+    "p-meta": {
+      tag:"Onde a curva se fecha",
+      titulo:"Metamatemática",
+      texto:["Quando as demonstrações passam a ser cadeias finitas de símbolos, elas se tornam objetos como quaisquer outros — contáveis, ordenáveis, codificáveis por números. A matemática pode então falar sobre si mesma com seus próprios meios.",
+             "Gödel usa exatamente isso para construir uma sentença que afirma a própria indemonstrabilidade, e o programa de Hilbert cai. Mas a técnica sobrevive ao programa: codificar processos formais como números é o gesto que, oito anos depois, Turing transforma em máquina."]
+    }
+  };
+
+  var alvo = document.getElementById("detalhe");
+  var r1 = document.getElementById("raio1");
+  var r2 = document.getElementById("raio2");
+  var pontos = Array.prototype.slice.call(document.querySelectorAll(".ponto"));
+
+  function mostrar(id){
+    var d = dados[id];
+    if(!d) return;
+    var el = document.getElementById(id);
+    pontos.forEach(function(p){ p.classList.toggle("on", p.id === id); });
+
+    var x = el.getAttribute("data-x"), y = el.getAttribute("data-y");
+    r1.setAttribute("x1", x); r1.setAttribute("y1", y);
+    r2.setAttribute("x1", x); r2.setAttribute("y1", y);
+    r1.classList.add("on"); r2.classList.add("on");
+
+    var html = '<p class="tag">' + d.tag + '</p><h3>' + d.titulo + '</h3>';
+    d.texto.forEach(function(p){ html += '<p>' + p + '</p>'; });
+    alvo.innerHTML = html;
+  }
+
+  pontos.forEach(function(p){
+    p.addEventListener("click", function(){ mostrar(p.id); });
+    p.addEventListener("keydown", function(e){
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); mostrar(p.id); }
+    });
+  });
+
+  mostrar("p-boole");
+})();
+</script>
+</body>
+</html>
