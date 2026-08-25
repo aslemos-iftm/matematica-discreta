@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reticulado dos divisores — Matemática Discreta · IFTM</title>
+<meta name="description" content="Gerador do diagrama de Hasse do reticulado dos divisores de um inteiro, com ínfimo, supremo e diagnóstico estrutural.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f; --surface:#0d1119; --surface2:#111725;
+    --rule:#1b2230; --text:#e7eaf0; --muted:#868ea2;
+    --amber:#f5a623; --amber-dim:#8a5f16; --azul:#6fb3d2;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif:"IBM Plex Serif", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);
+       font-size:15px;line-height:1.68;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:62rem;margin:0 auto;padding:clamp(2.5rem,8vw,5rem) clamp(1.25rem,5vw,2.5rem) 4rem;}
+
+  .eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 1.1rem;}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,5.5vw,2.8rem);
+     line-height:1.1;letter-spacing:-.015em;margin:0;}
+  .lead{color:var(--muted);max-width:40rem;margin:1rem 0 0;}
+
+  /* controles */
+  .controles{margin-top:2.5rem;display:flex;flex-wrap:wrap;gap:.7rem;align-items:center;}
+  input[type=text]{
+    font-family:var(--mono);font-size:1.15rem;width:9.5rem;padding:.6rem .8rem;
+    background:var(--surface2);color:var(--text);border:1px solid var(--rule);border-radius:8px;
+  }
+  input[type=text]:focus{outline:none;border-color:var(--amber);}
+  button{
+    font-family:var(--mono);font-size:.85rem;letter-spacing:.04em;padding:.65rem 1.1rem;
+    background:var(--surface2);color:var(--text);border:1px solid var(--rule);border-radius:8px;cursor:pointer;
+    transition:border-color .16s,color .16s;
+  }
+  button:hover,button:focus-visible{border-color:var(--amber);color:var(--amber);outline:none;}
+  button.primario{border-color:var(--amber-dim);color:var(--amber);}
+
+  .sugestoes{margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;}
+  .sugestoes span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:.3rem;}
+  .chip{font-family:var(--mono);font-size:.8rem;padding:.2rem .6rem;background:none;border:1px solid var(--rule);border-radius:20px;}
+
+  /* diagnóstico */
+  .diag{margin-top:1.6rem;display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule);border-radius:10px;overflow:hidden;}
+  .diag div{flex:1 1 7rem;padding:.75rem .9rem;border-right:1px solid var(--rule);background:var(--surface);}
+  .diag div:last-child{border-right:0;}
+  .diag .rot{font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:block;}
+  .diag .val{font-family:var(--serif);font-size:1.05rem;color:var(--text);}
+  .diag .val em{font-style:italic;}
+
+  .nota{margin-top:.9rem;padding:.85rem 1rem;border-left:2px solid var(--amber);background:var(--surface);
+        font-size:.83rem;color:var(--muted);border-radius:0 8px 8px 0;}
+  .nota b{color:var(--amber);font-weight:400;}
+  .nota.oculta{display:none;}
+
+  /* palco */
+  .palco{margin-top:1.4rem;background:var(--surface);border:1px solid var(--rule);border-radius:12px;
+         padding:1rem .75rem;overflow-x:auto;}
+  svg{display:block;width:100%;height:auto;min-width:22rem;}
+
+  .are{stroke:var(--rule);stroke-width:1.2;fill:none;}
+  .are.viva{stroke:var(--amber-dim);stroke-width:1.6;}
+  .no{cursor:pointer;}
+  .no rect{fill:var(--surface2);stroke:var(--rule);stroke-width:1.2;transition:stroke .14s,fill .14s;}
+  .no text{font-family:var(--mono);font-size:12px;fill:var(--muted);transition:fill .14s;}
+  .no:hover rect{stroke:var(--muted);}
+  .no.sel rect{fill:#1f1808;stroke:var(--amber);stroke-width:1.8;}
+  .no.sel text{fill:var(--amber);}
+  .no.inf rect,.no.sup rect{stroke:var(--azul);stroke-width:1.8;stroke-dasharray:3 2;}
+  .no.inf text,.no.sup text{fill:var(--azul);}
+  .no:focus{outline:none;}
+  .no:focus-visible rect{stroke:var(--text);stroke-width:2;}
+  .marca{font-family:var(--mono);font-size:10px;fill:var(--azul);letter-spacing:.08em;}
+  .palco.girando{cursor:grabbing;}
+  .palco.arrastavel{cursor:grab;}
+  .are.fundo{stroke:#141a26;}
+  .no.fundo rect{fill:#0b0f18;stroke:#141a26;}
+  .no.fundo text{fill:#4d5568;}
+  .arrastar{margin-top:.55rem;font-size:.74rem;color:var(--muted);letter-spacing:.03em;}
+  .arrastar.oculta{display:none;}
+
+  .leitura{margin-top:1rem;padding:1rem 1.1rem;border:1px solid var(--rule);border-radius:10px;
+           background:var(--surface);font-size:.86rem;color:var(--muted);min-height:3.5rem;}
+  .leitura b{color:var(--text);font-weight:400;font-family:var(--serif);font-size:1rem;}
+  .leitura .az{color:var(--azul);}
+  .leitura .am{color:var(--amber);}
+
+  .dicas{margin-top:2.5rem;border-top:1px solid var(--rule);}
+  .dica{border-bottom:1px solid var(--rule);padding:1rem 0;display:grid;grid-template-columns:8rem 1fr;gap:1rem;}
+  .dica .q{font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;color:var(--amber);}
+  .dica p{margin:0;color:var(--muted);font-size:.85rem;}
+  @media (max-width:34rem){.dica{grid-template-columns:1fr;gap:.2rem;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">IFTM · Matemática Discreta</p>
+  <h1>Reticulado dos divisores</h1>
+  <p class="lead">Digite um inteiro positivo. A página constrói o diagrama de Hasse de D(<em>n</em>) sob a relação de divisibilidade — e diz o que a aritmética de <em>n</em> impõe ao desenho.</p>
+</header>
+
+<div class="controles">
+  <input type="text" id="entrada" value="120" inputmode="numeric" aria-label="número inteiro">
+  <button class="primario" id="btn-ir">construir</button>
+  <button id="btn-vista">vista</button>
+  <button id="btn-dual">dualidade  d ↦ n/d</button>
+  <button id="btn-limpar">limpar seleção</button>
+</div>
+
+<div class="sugestoes">
+  <span>experimente</span>
+  <button class="chip" data-n="12">12</button>
+  <button class="chip" data-n="30">30</button>
+  <button class="chip" data-n="36">36</button>
+  <button class="chip" data-n="120">120</button>
+  <button class="chip" data-n="210">210</button>
+  <button class="chip" data-n="360">360</button>
+  <button class="chip" data-n="1024">1024</button>
+  <button class="chip" data-n="2310">2310</button>
+</div>
+
+<div class="diag" id="diag"></div>
+<div class="nota oculta" id="nota"></div>
+
+<div class="palco" id="palco"></div>
+<p class="arrastar oculta" id="arrastar">Arraste o desenho para girar a caixa. A vertical continua sendo Ω(<em>d</em>): a figura gira, mas não deixa de ser um diagrama de Hasse.</p>
+<div class="leitura" id="leitura">Clique em dois divisores para ver o ínfimo (mdc) e o supremo (mmc).</div>
+
+<div class="dicas">
+  <div class="dica"><span class="q">Ínfimo e supremo</span>
+    <p>Selecionados dois divisores, o mdc é o maior elemento abaixo de ambos e o mmc é o menor acima de ambos. É a definição de reticulado, exibida no exemplo mais concreto que existe.</p></div>
+  <div class="dica"><span class="q">Autodualidade</span>
+    <p>A aplicação <em>d</em> ↦ <em>n</em>/<em>d</em> inverte a ordem sem mudar o desenho. O botão troca os rótulos: a figura permanece idêntica, mas o topo passa a ser 1. D(<em>n</em>) é isomorfo ao seu próprio dual.</p></div>
+  <div class="dica"><span class="q">Booleano</span>
+    <p>Quando <em>n</em> é livre de quadrados, todo expoente vale 1 e o reticulado é um hipercubo: cada divisor tem complemento, e D(<em>n</em>) ≅ conjunto das partes dos primos de <em>n</em>. Compare 30 com 36.</p></div>
+  <div class="dica"><span class="q">Vista espacial</span>
+    <p>D(<em>n</em>) é isomorfo a um produto de cadeias: com três primos distintos, é literalmente uma caixa tridimensional de pontos. A vista 3D projeta essa caixa mantendo a direção (1,1,1) na vertical — por isso a altura continua sendo Ω(<em>d</em>) e a figura segue sendo um diagrama de Hasse legítimo enquanto gira. Arraste para girar.</p></div>
+  <div class="dica"><span class="q">Cruzamentos</span>
+    <p>Há duas razões diferentes para eles aparecerem, e vale distinguir. Com ω(n) = 3 o grafo é planar, mas o desenho por camadas de posto não é: os cruzamentos vêm da restrição de altura, não do grafo. Com ω(n) ≥ 4 surge o hipercubo Q₄, que não é planar de forma alguma — aí nenhum estilo de desenho salva. Compare 30 com 210 e veja o contador saltar.</p></div>
+</div>
+
+<footer style="margin:3rem 0 0;padding:1.4rem 0 0;border-top:1px solid #1b2230;
+               font-size:.76rem;line-height:1.6;color:#868ea2;">
+  <style>
+    .voltar-md{color:#868ea2;text-decoration:none;border-bottom:1px solid #1b2230;
+               transition:color .16s,border-color .16s;}
+    .voltar-md:hover,.voltar-md:focus-visible{color:#f5a623;border-color:#f5a623;}
+    .voltar-md .seta{display:inline-block;transition:transform .16s;}
+    .voltar-md:hover .seta{transform:translateX(-3px);}
+  </style>
+  <a class="voltar-md" href="index.html"><span class="seta" aria-hidden="true">←</span> Matemática Discreta</a>
+  · Prof. André Lemos · IFTM Campus Uberlândia Centro
+</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var LIMITE = 64, NMAX = 10000000;
+  var est = { n:1, fat:[], divs:[], camadas:[], sel:[], dual:false, inf:null, sup:null, modo:"plano", pode3d:false, dimC:0, th:0, ps:0, arrastou:false };
+
+  var elDiag = document.getElementById("diag");
+  var elNota = document.getElementById("nota");
+  var elPalco = document.getElementById("palco");
+  var elLeitura = document.getElementById("leitura");
+  var elEntrada = document.getElementById("entrada");
+
+  /* ---------- aritmética ---------- */
+
+  function fatorar(n){
+    var f = [], m = n, p;
+    for(p = 2; p * p <= m; p++){
+      if(m % p === 0){ var e = 0; while(m % p === 0){ m /= p; e++; } f.push([p, e]); }
+    }
+    if(m > 1) f.push([m, 1]);
+    return f;
+  }
+
+  function gerarDivisores(f){
+    var lista = [{ v:1, e:[] }];
+    for(var i = 0; i < f.length; i++) lista[0].e.push(0);
+    for(var i = 0; i < f.length; i++){
+      var p = f[i][0], a = f[i][1], nova = [];
+      for(var j = 0; j < lista.length; j++){
+        var pot = 1;
+        for(var k = 0; k <= a; k++){
+          var e = lista[j].e.slice(); e[i] = k;
+          nova.push({ v: lista[j].v * pot, e: e });
+          pot *= p;
+        }
+      }
+      lista = nova;
+    }
+    lista.sort(function(A,B){ return A.v - B.v; });
+    return lista;
+  }
+
+  function omegaBig(d){ var s = 0; for(var i = 0; i < d.e.length; i++) s += d.e[i]; return s; }
+
+  /* ---------- layout ---------- */
+
+  function montarCamadas(){
+    var maxL = omegaBig({ e: est.fat.map(function(x){ return x[1]; }) });
+    var cam = [], i;
+    for(i = 0; i <= maxL; i++) cam.push([]);
+    est.divs.forEach(function(d){ d.L = omegaBig(d); cam[d.L].push(d); });
+
+    // semente: projeção com pesos alternados e decrescentes
+    var pesos = [1, -1, 0.45, -0.45, 0.19, -0.19, 0.08, -0.08];
+    cam.forEach(function(c){
+      c.forEach(function(d){
+        var x = 0;
+        for(var i = 0; i < d.e.length; i++) x += d.e[i] * (pesos[i] !== undefined ? pesos[i] : 0.03 / (i + 1));
+        d.chave = x;
+      });
+      c.sort(function(A,B){ return A.chave - B.chave || A.v - B.v; });
+      c.forEach(function(d,i){ d.ix = i; });
+    });
+
+    if(est.fat.length >= 3) otimizar(cam);
+    return cam;
+  }
+
+  function vizinhos(d, acima){
+    var r = [], i;
+    for(i = 0; i < est.fat.length; i++){
+      var p = est.fat[i][0], a = est.fat[i][1];
+      if(acima && d.e[i] < a) r.push(est.mapa[d.v * p]);
+      if(!acima && d.e[i] > 0) r.push(est.mapa[d.v / p]);
+    }
+    return r;
+  }
+
+  function mediana(v){
+    if(!v.length) return -1;
+    v.sort(function(a,b){ return a - b; });
+    var m = v.length >> 1;
+    return v.length % 2 ? v[m] : (v[m-1] + v[m]) / 2;
+  }
+
+  function cruzEntre(cam, L){
+    if(L < 0 || L + 1 >= cam.length) return 0;
+    var ar = [];
+    cam[L].forEach(function(d){ vizinhos(d, true).forEach(function(u){ ar.push([d.ix, u.ix]); }); });
+    var t = 0;
+    for(var i = 0; i < ar.length; i++)
+      for(var j = i + 1; j < ar.length; j++)
+        if((ar[i][0] - ar[j][0]) * (ar[i][1] - ar[j][1]) < 0) t++;
+    return t;
+  }
+
+  function contarCruzamentos(cam){
+    var t = 0;
+    for(var L = 0; L + 1 < cam.length; L++) t += cruzEntre(cam, L);
+    return t;
+  }
+
+  function reindexar(c){ c.forEach(function(d,i){ d.ix = i; }); }
+
+  function foto(cam){ return cam.map(function(c){ return c.map(function(d){ return d.v; }); }); }
+
+  function repor(cam, f){
+    cam.forEach(function(c, L){
+      var ordem = f[L];
+      c.sort(function(A,B){ return ordem.indexOf(A.v) - ordem.indexOf(B.v); });
+      reindexar(c);
+    });
+  }
+
+  function varrer(cam, subindo){
+    var ordem = [], L;
+    if(subindo){ for(L = 1; L < cam.length; L++) ordem.push(L); }
+    else { for(L = cam.length - 2; L >= 0; L--) ordem.push(L); }
+    ordem.forEach(function(L){
+      cam[L].forEach(function(d){
+        var vz = vizinhos(d, !subindo).map(function(u){ return u.ix; });
+        var m = mediana(vz);
+        d.chave = m < 0 ? d.ix : m;
+      });
+      cam[L].sort(function(A,B){ return A.chave - B.chave || A.v - B.v; });
+      reindexar(cam[L]);
+    });
+  }
+
+  /* troca de vizinhos: aceita a permuta se o total local cair */
+  function transpor(cam){
+    var mexeu = true, voltas = 0;
+    while(mexeu && voltas < 60){
+      mexeu = false; voltas++;
+      for(var L = 0; L < cam.length; L++){
+        for(var i = 0; i + 1 < cam[L].length; i++){
+          var antes = cruzEntre(cam, L - 1) + cruzEntre(cam, L);
+          var a = cam[L][i], b = cam[L][i+1];
+          cam[L][i] = b; cam[L][i+1] = a; b.ix = i; a.ix = i + 1;
+          var depois = cruzEntre(cam, L - 1) + cruzEntre(cam, L);
+          if(depois < antes){ mexeu = true; }
+          else { cam[L][i] = a; cam[L][i+1] = b; a.ix = i; b.ix = i + 1; }
+        }
+      }
+    }
+  }
+
+  function embaralhar(cam){
+    cam.forEach(function(c){
+      for(var i = c.length - 1; i > 0; i--){
+        var j = Math.floor(Math.random() * (i + 1)), t = c[i]; c[i] = c[j]; c[j] = t;
+      }
+      reindexar(c);
+    });
+  }
+
+  function otimizar(cam){
+    var melhor = contarCruzamentos(cam), guarda = foto(cam);
+    for(var tent = 0; tent < 8; tent++){
+      if(tent > 0) embaralhar(cam);
+      for(var it = 0; it < 6; it++){
+        varrer(cam, it % 2 === 0);
+        transpor(cam);
+        var c = contarCruzamentos(cam);
+        if(c < melhor){ melhor = c; guarda = foto(cam); }
+      }
+    }
+    repor(cam, guarda);
+  }
+
+  /* ---------- projeção alinhada por posto ---------- */
+
+  function baseComplemento(k){
+    var up = [], i, j;
+    for(i = 0; i < k; i++) up.push(1 / Math.sqrt(k));
+    var base = [];
+    for(i = 0; i < k && base.length < k - 1; i++){
+      var v = []; for(j = 0; j < k; j++) v.push(i === j ? 1 : 0);
+      var d = 0; for(j = 0; j < k; j++) d += v[j] * up[j];
+      for(j = 0; j < k; j++) v[j] -= d * up[j];
+      base.forEach(function(b){
+        var t = 0; for(var q = 0; q < k; q++) t += v[q] * b[q];
+        for(var q = 0; q < k; q++) v[q] -= t * b[q];
+      });
+      var n = 0; for(j = 0; j < k; j++) n += v[j] * v[j];
+      n = Math.sqrt(n);
+      if(n > 1e-9){ base.push(v.map(function(x){ return x / n; })); }
+    }
+    return base;
+  }
+
+  /* coordenadas de cada divisor no complemento, já centradas na caixa */
+  function coordsComplemento(){
+    var k = est.fat.length, B = baseComplemento(k);
+    est.divs.forEach(function(d){
+      var c = [], i;
+      for(i = 0; i < k; i++) c.push(d.e[i] - est.fat[i][1] / 2);
+      d.q = B.map(function(b){
+        var s = 0; for(var j = 0; j < k; j++) s += c[j] * b[j];
+        return s;
+      });
+    });
+    est.dimC = B.length;
+  }
+
+  /* do complemento para (x na tela, profundidade) */
+  function girar(q, th, ps){
+    if(q.length === 0) return [0, 0];
+    if(q.length === 1) return [q[0], 0];
+    var X = q[0] * Math.cos(th) - q[1] * Math.sin(th);
+    var Y = q[0] * Math.sin(th) + q[1] * Math.cos(th);
+    if(q.length === 2) return [X, Y];
+    /* três direções no complemento: a inclinação traz a terceira para a horizontal,
+       senão os nós que só diferem nela se sobrepõem */
+    var Z = q[2];
+    var X2 = X * Math.cos(ps) - Z * Math.sin(ps);
+    return [X2, Y];
+  }
+
+  /* escolhe o ângulo inicial que mais separa os nós dentro de cada posto */
+  function melhorAngulo(){
+    var melhor = -1, bt = 0, bp = 0;
+    var passosP = est.dimC >= 3 ? 36 : 1;
+    for(var a = 0; a < 72; a++){
+      var th = a * Math.PI / 72;
+      for(var b = 0; b < passosP; b++){
+        var ps = b * Math.PI / passosP;
+        var minG = Infinity;
+        est.camadas.forEach(function(c){
+          var xs = c.map(function(d){ return girar(d.q, th, ps)[0]; }).sort(function(A,B){ return A - B; });
+          for(var i = 1; i < xs.length; i++) minG = Math.min(minG, xs[i] - xs[i-1]);
+        });
+        if(minG === Infinity) minG = 1;
+        if(minG > melhor){ melhor = minG; bt = th; bp = ps; }
+      }
+    }
+    est.th = bt; est.ps = bp;
+  }
+
+  function desenhar3D(){
+    var cam = est.camadas, rotMax = 1;
+    est.divs.forEach(function(d){ rotMax = Math.max(rotMax, String(rotulo(d)).length); });
+    var noW = Math.max(38, rotMax * 8.5 + 16), noH = 26, dy = 74;
+
+    est.divs.forEach(function(d){
+      var g = girar(d.q, est.th, est.ps);
+      d.rx = g[0]; d.prof = g[1];
+    });
+
+    var xs = est.divs.map(function(d){ return d.rx; });
+    var lo = Math.min.apply(null, xs), hi = Math.max.apply(null, xs);
+    var span = hi - lo || 1;
+
+    /* escala: separa o par mais próximo dentro de um posto, com teto */
+    var minG = Infinity;
+    cam.forEach(function(c){
+      var v = c.map(function(d){ return d.rx; }).sort(function(A,B){ return A - B; });
+      for(var i = 1; i < v.length; i++) minG = Math.min(minG, v[i] - v[i-1]);
+    });
+    var esc = minG === Infinity ? 90 : Math.min(150, Math.max(34, (noW + 12) / minG));
+    var W = Math.max(660, span * esc + noW + 80);
+    var H = (cam.length - 1) * dy + 90, cxx = W / 2, meio = (lo + hi) / 2;
+
+    est.divs.forEach(function(d){
+      d.x = cxx + (d.rx - meio) * esc;
+      d.y = 45 + (cam.length - 1 - d.L) * dy;
+    });
+
+    var pmin = Math.min.apply(null, est.divs.map(function(d){ return d.prof; }));
+    var pmax = Math.max.apply(null, est.divs.map(function(d){ return d.prof; }));
+    var faixa = (pmax - pmin) || 1;
+    function atras(d){ return (d.prof - pmin) / faixa < 0.38; }
+
+    var arestas = [];
+    est.divs.forEach(function(d){
+      vizinhos(d, true).forEach(function(u){ arestas.push({ a:d, b:u, p:(d.prof + u.prof) / 2 }); });
+    });
+    arestas.sort(function(A,B){ return A.p - B.p; });
+
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Diagrama de Hasse espacial dos divisores de ' + est.n + '">';
+
+    arestas.forEach(function(e){
+      var viva = est.sel.length === 2 && dentroIntervalo(e.a) && dentroIntervalo(e.b);
+      var fundo = !viva && atras(e.a) && atras(e.b);
+      s += '<line class="are' + (viva ? ' viva' : (fundo ? ' fundo' : '')) + '" x1="' + e.a.x + '" y1="' + (e.a.y - noH/2) +
+           '" x2="' + e.b.x + '" y2="' + (e.b.y + noH/2) + '"/>';
+    });
+
+    est.divs.slice().sort(function(A,B){ return A.prof - B.prof; }).forEach(function(d){
+      var cls = "no";
+      if(est.sel.indexOf(d.v) >= 0) cls += " sel";
+      else if(est.inf === d.v || est.sup === d.v) cls += "";
+      else if(atras(d)) cls += " fundo";
+      if(est.inf === d.v) cls += " inf";
+      if(est.sup === d.v) cls += " sup";
+      s += '<g class="' + cls + '" tabindex="0" role="button" data-v="' + d.v + '">' +
+           '<rect x="' + (d.x - noW/2) + '" y="' + (d.y - noH/2) + '" width="' + noW + '" height="' + noH + '" rx="6"/>' +
+           '<text x="' + d.x + '" y="' + (d.y + 4) + '" text-anchor="middle">' + rotulo(d) + '</text>';
+      if(est.inf === d.v) s += '<text class="marca" x="' + d.x + '" y="' + (d.y + noH/2 + 13) + '" text-anchor="middle">ÍNFIMO · mdc</text>';
+      if(est.sup === d.v) s += '<text class="marca" x="' + d.x + '" y="' + (d.y - noH/2 - 6) + '" text-anchor="middle">SUPREMO · mmc</text>';
+      s += '</g>';
+    });
+
+    return s + '</svg>';
+  }
+
+  /* ---------- desenho ---------- */
+
+  function desenhar(){
+    elPalco.innerHTML = est.modo === "3d" ? desenhar3D() : desenharPlano();
+    elPalco.classList.toggle("arrastavel", est.modo === "3d" && est.dimC >= 2);
+    Array.prototype.forEach.call(elPalco.querySelectorAll(".no"), function(g){
+      g.addEventListener("click", function(){
+        if(est.arrastou) return;
+        selecionar(Number(g.getAttribute("data-v")));
+      });
+      g.addEventListener("keydown", function(e){
+        if(e.key === "Enter" || e.key === " "){ e.preventDefault(); selecionar(Number(g.getAttribute("data-v"))); }
+      });
+    });
+  }
+
+  function desenharPlano(){
+    var cam = est.camadas;
+    var larguraMax = Math.max.apply(null, cam.map(function(c){ return c.length; }));
+    var rotMax = 1;
+    est.divs.forEach(function(d){ rotMax = Math.max(rotMax, String(rotulo(d)).length); });
+
+    var noW = Math.max(38, rotMax * 8.5 + 16), noH = 26;
+    var dx = noW + 16, dy = 74;
+    var W = Math.max(660, larguraMax * dx + 70);
+    var H = (cam.length - 1) * dy + 90;
+    var cxx = W / 2;
+
+    cam.forEach(function(c, L){
+      c.forEach(function(d, i){
+        d.x = cxx + (i - (c.length - 1) / 2) * dx;
+        d.y = 45 + (cam.length - 1 - L) * dy;
+      });
+    });
+
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Diagrama de Hasse dos divisores de ' + est.n + '">';
+
+    est.divs.forEach(function(d){
+      vizinhos(d, true).forEach(function(u){
+        var viva = est.sel.length === 2 && dentroIntervalo(d) && dentroIntervalo(u);
+        s += '<line class="are' + (viva ? ' viva' : '') + '" x1="' + d.x + '" y1="' + (d.y - noH/2) +
+             '" x2="' + u.x + '" y2="' + (u.y + noH/2) + '"/>';
+      });
+    });
+
+    est.divs.forEach(function(d){
+      var cls = "no";
+      if(est.sel.indexOf(d.v) >= 0) cls += " sel";
+      if(est.inf === d.v) cls += " inf";
+      if(est.sup === d.v) cls += " sup";
+      s += '<g class="' + cls + '" tabindex="0" role="button" data-v="' + d.v + '">' +
+           '<rect x="' + (d.x - noW/2) + '" y="' + (d.y - noH/2) + '" width="' + noW + '" height="' + noH + '" rx="6"/>' +
+           '<text x="' + d.x + '" y="' + (d.y + 4) + '" text-anchor="middle">' + rotulo(d) + '</text>';
+      if(est.inf === d.v) s += '<text class="marca" x="' + d.x + '" y="' + (d.y + noH/2 + 13) + '" text-anchor="middle">ÍNFIMO · mdc</text>';
+      if(est.sup === d.v) s += '<text class="marca" x="' + d.x + '" y="' + (d.y - noH/2 - 6) + '" text-anchor="middle">SUPREMO · mmc</text>';
+      s += '</g>';
+    });
+
+    return s + '</svg>';
+  }
+
+  function rotulo(d){ return est.dual ? est.n / d.v : d.v; }
+
+  function dentroIntervalo(d){
+    if(est.inf === null || est.sup === null) return false;
+    return est.sup % d.v === 0 && d.v % est.inf === 0;
+  }
+
+  /* ---------- seleção ---------- */
+
+  function mdc(a,b){ while(b){ var t = a % b; a = b; b = t; } return a; }
+
+  function selecionar(v){
+    var i = est.sel.indexOf(v);
+    if(i >= 0) est.sel.splice(i,1);
+    else { est.sel.push(v); if(est.sel.length > 2) est.sel.shift(); }
+    atualizarLeitura();
+    desenhar();
+  }
+
+  function atualizarLeitura(){
+    if(est.sel.length < 2){
+      est.inf = est.sup = null;
+      elLeitura.innerHTML = est.sel.length === 1
+        ? 'Selecionado <b>' + est.sel[0] + '</b>. Escolha um segundo divisor.'
+        : 'Clique em dois divisores para ver o ínfimo (mdc) e o supremo (mmc).';
+      return;
+    }
+    var a = est.sel[0], b = est.sel[1];
+    var g = mdc(a,b), l = a / g * b;
+    est.inf = g; est.sup = l;
+    elLeitura.innerHTML =
+      '<b>' + a + '</b> <span class="am">∧</span> <b>' + b + '</b> = <span class="az">' + g + '</span> &nbsp;·&nbsp; ' +
+      '<b>' + a + '</b> <span class="am">∨</span> <b>' + b + '</b> = <span class="az">' + l + '</span><br>' +
+      'O ínfimo é o maior divisor comum aos dois; o supremo, o menor múltiplo comum dentro de D(' + est.n + '). ' +
+      (g === a || g === b ? 'Como um divide o outro, o par é comparável: ínfimo e supremo são os próprios selecionados.' : '');
+  }
+
+  /* ---------- diagnóstico ---------- */
+
+  function escrever(n, f, divs, cruz){
+    var tau = divs.length;
+    var om = f.length;
+    var Om = f.reduce(function(s,x){ return s + x[1]; }, 0);
+    var maxCam = 0, cont = {};
+    divs.forEach(function(d){ var L = omegaBig(d); cont[L] = (cont[L]||0) + 1; maxCam = Math.max(maxCam, cont[L]); });
+
+    var fatTxt = f.length
+      ? f.map(function(x){ return x[0] + (x[1] > 1 ? '<sup>' + x[1] + '</sup>' : ''); }).join(' · ')
+      : '1';
+
+    elDiag.innerHTML =
+      cel("fatoração", fatTxt) +
+      cel("divisores  τ(n)", tau) +
+      cel("primos distintos  ω(n)", om) +
+      cel("altura  Ω(n)", Om) +
+      cel("camada mais larga", maxCam) +
+      cel("cruzamentos", cruz);
+
+    var avisos = [];
+    if(om >= 4) avisos.push("Com <b>ω(n) ≥ 4</b>, os divisores de quatro primos distintos formam um subgrafo isomorfo ao hipercubo Q₄, que <b>não é planar nem como grafo</b>. Nenhum desenho, de nenhum estilo, elimina os cruzamentos.");
+    else if(om <= 2) avisos.push("Com <b>ω(n) ≤ 2</b> o diagrama é uma grade rômbica exata e não há cruzamento algum — a posição de cada divisor é o próprio par de expoentes.");
+    else avisos.push("Com <b>ω(n) = 3</b> o reticulado é o cubo Q₃, que <b>é</b> um grafo planar. Mesmo assim aparecem cruzamentos: ao fixar a altura pelo posto Ω(d), os dois níveis do meio formam um hexágono, e um hexágono distribuído em duas camadas exige no mínimo dois cruzamentos. A planaridade do grafo não sobrevive à exigência de desenhar por camadas.");
+
+    if(f.length && f.every(function(x){ return x[1] === 1; }) && f.length > 0)
+      avisos.push("<b>n</b> é livre de quadrados: D(n) é um reticulado booleano, isomorfo ao conjunto das partes de {" + f.map(function(x){ return x[0]; }).join(", ") + "}.");
+    if(f.length === 1)
+      avisos.push("Com um único primo, D(n) é uma <b>cadeia</b>: a ordem por divisibilidade é total.");
+    if(est.pode3d && om === 3)
+      avisos.push("D(n) é uma <b>caixa " + (f[0][1]+1) + "×" + (f[1][1]+1) + "×" + (f[2][1]+1) + "</b> de pontos: a vista espacial mostra a estrutura sem deformação. Arraste o desenho para girar.");
+    if(est.pode3d && om === 4)
+      avisos.push("Com quatro primos, a caixa é quadridimensional e a projeção perde uma direção — girar troca <em>qual</em> direção se perde. Ainda assim a altura permanece Ω(d), e o desenho continua sendo um diagrama de Hasse.");
+    if(!est.pode3d && om >= 4)
+      avisos.push("Vista espacial indisponível: com " + om + " primos distintos e " + est.divs.length + " divisores, a projeção ficaria ilegível. Mantida a representação por camadas.");
+
+    elNota.innerHTML = avisos.join("<br><br>");
+    elNota.classList.remove("oculta");
+  }
+
+  function cel(rot, val){
+    return '<div><span class="rot">' + rot + '</span><span class="val">' + val + '</span></div>';
+  }
+
+  function recusar(n, tau){
+    elDiag.innerHTML = cel("entrada", n) + cel("divisores  τ(n)", tau) + cel("limite desta página", LIMITE);
+    elNota.innerHTML = "<b>" + n + "</b> tem <b>" + tau + "</b> divisores, acima do limite de " + LIMITE +
+      " que esta página desenha. Não é limitação de cálculo — é de leitura: a camada mais larga passaria de uma dúzia de nós, " +
+      "e o diagrama deixaria de mostrar a estrutura que deveria ensinar. Tente um número com menos divisores, ou compare " +
+      "τ(n) com a fatoração para prever quantos serão antes de digitar.";
+    elNota.classList.remove("oculta");
+    elPalco.innerHTML = "";
+    elLeitura.textContent = "—";
+  }
+
+  /* ---------- ciclo ---------- */
+
+  function construir(n){
+    est.sel = []; est.inf = est.sup = null; est.dual = false;
+
+    if(!isFinite(n) || n < 1 || Math.floor(n) !== n){
+      elDiag.innerHTML = cel("entrada", "inválida");
+      elNota.innerHTML = "Digite um inteiro positivo.";
+      elNota.classList.remove("oculta");
+      elPalco.innerHTML = ""; return;
+    }
+    if(n > NMAX){
+      elDiag.innerHTML = cel("entrada", n);
+      elNota.innerHTML = "Acima de " + NMAX.toLocaleString("pt-BR") + " a fatoração por divisão sucessiva fica lenta no navegador.";
+      elNota.classList.remove("oculta");
+      elPalco.innerHTML = ""; return;
+    }
+
+    var f = fatorar(n);
+    var tau = f.reduce(function(s,x){ return s * (x[1] + 1); }, 1);
+    if(tau > LIMITE){ recusar(n, tau); return; }
+
+    est.n = n; est.fat = f;
+    est.divs = gerarDivisores(f);
+    est.mapa = {};
+    est.divs.forEach(function(d){ est.mapa[d.v] = d; });
+    est.camadas = montarCamadas();
+
+    est.pode3d = (f.length === 3) || (f.length === 4 && est.divs.length <= 32);
+    est.modo = est.pode3d ? "3d" : "plano";
+    if(est.pode3d){ coordsComplemento(); melhorAngulo(); }
+    else { est.dimC = 0; }
+    atualizarBotaoVista();
+
+    escrever(n, f, est.divs, contarCruzamentos(est.camadas));
+    atualizarLeitura();
+    desenhar();
+  }
+
+  document.getElementById("btn-ir").addEventListener("click", function(){
+    construir(parseInt(elEntrada.value, 10));
+  });
+  elEntrada.addEventListener("keydown", function(e){
+    if(e.key === "Enter") construir(parseInt(elEntrada.value, 10));
+  });
+  function atualizarBotaoVista(){
+    var b = document.getElementById("btn-vista");
+    b.disabled = !est.pode3d;
+    b.style.opacity = est.pode3d ? "1" : ".4";
+    b.textContent = !est.pode3d ? "vista  ·  só planar"
+                  : (est.modo === "3d" ? "vista  ·  espacial" : "vista  ·  planar");
+    document.getElementById("arrastar").classList.toggle("oculta", !(est.modo === "3d" && est.dimC >= 2));
+  }
+
+  document.getElementById("btn-vista").addEventListener("click", function(){
+    if(!est.pode3d) return;
+    est.modo = est.modo === "3d" ? "plano" : "3d";
+    atualizarBotaoVista();
+    desenhar();
+  });
+
+  /* arraste para girar */
+  (function(){
+    var ativo = false, x0 = 0, y0 = 0, t0 = 0, p0 = 0, pedido = null;
+    function inicio(ev){
+      if(est.modo !== "3d" || est.dimC < 2) return;
+      ativo = true; est.arrastou = false;
+      var p = ev.touches ? ev.touches[0] : ev;
+      x0 = p.clientX; y0 = p.clientY; t0 = est.th; p0 = est.ps;
+      elPalco.classList.add("girando");
+    }
+    function move(ev){
+      if(!ativo) return;
+      var p = ev.touches ? ev.touches[0] : ev;
+      var dx = p.clientX - x0, dy = p.clientY - y0;
+      if(Math.abs(dx) + Math.abs(dy) > 4) est.arrastou = true;
+      est.th = t0 + dx * 0.011;
+      if(est.dimC >= 3) est.ps = p0 + dy * 0.011;
+      if(ev.cancelable && est.arrastou) ev.preventDefault();
+      if(!pedido) pedido = requestAnimationFrame(function(){ pedido = null; desenhar(); });
+    }
+    function fim(){
+      if(!ativo) return;
+      ativo = false; elPalco.classList.remove("girando");
+      setTimeout(function(){ est.arrastou = false; }, 30);
+    }
+    elPalco.addEventListener("mousedown", inicio);
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", fim);
+    elPalco.addEventListener("touchstart", inicio, { passive:true });
+    elPalco.addEventListener("touchmove", move, { passive:false });
+    window.addEventListener("touchend", fim);
+  })();
+
+  document.getElementById("btn-dual").addEventListener("click", function(){
+    est.dual = !est.dual; desenhar();
+  });
+  document.getElementById("btn-limpar").addEventListener("click", function(){
+    est.sel = []; atualizarLeitura(); desenhar();
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".chip"), function(b){
+    b.addEventListener("click", function(){
+      elEntrada.value = b.getAttribute("data-n");
+      construir(parseInt(b.getAttribute("data-n"), 10));
+    });
+  });
+
+  construir(120);
+})();
+</script>
+</body>
+</html>
