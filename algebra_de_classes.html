@@ -100,6 +100,7 @@
     <button class="chip" data-e="O &gt;&gt; M">O &gt;&gt; M</button>
     <button class="chip" data-e="O &gt;&gt; V">O &gt;&gt; V</button>
     <button class="chip" data-e="BQ &gt;&gt; O">BQ &gt;&gt; O</button>
+    <button class="chip" data-e="~(O &gt;&gt; MV)">~(O &gt;&gt; MV)</button>
   </div>
   <div class="saida" id="saida-sim"></div>
 </section>
@@ -208,7 +209,28 @@ function analisar(txt){
   function fim(){ return i >= s.length; }
   function espia(){ return s.slice(i, i+2) === ">>" ? ">>" : s[i]; }
 
+  function ehProp(x){ return x && (x.t === "cop" || x.t === "neg"); }
+
+  /* ~( … >> … ) é negação de proposição, não complemento de classe.
+     Tenta-se primeiro essa leitura; se falhar, volta-se à leitura de classe. */
   function prop(){
+    var salvo = i;
+    if(s[i] === "~"){
+      i++;
+      try {
+        var d1 = prop();
+        if(ehProp(d1)) return {t:"neg", a:d1};
+      } catch(e){}
+      i = salvo;
+    }
+    if(s[i] === "("){
+      i++;
+      try {
+        var d2 = prop();
+        if(s[i] === ")" && ehProp(d2)){ i++; return d2; }
+      } catch(e){}
+      i = salvo;
+    }
     var e = soma();
     if(!fim() && espia() === ">>"){ i += 2; var d = soma(); return {t:"cop", a:e, b:d}; }
     return e;
@@ -231,7 +253,14 @@ function analisar(txt){
     if(fim()) throw new Error("expressão incompleta");
     var c = s[i];
     if(c === "~"){ i++; return {t:"nao", a:fator()}; }
-    if(c === "("){ i++; var e = soma(); if(s[i] !== ")") throw new Error("falta fechar parêntese"); i++; return e; }
+    if(c === "("){
+      i++;
+      var e = soma();
+      if(s.slice(i, i+2) === ">>")
+        throw new Error("a cópula “>>” produz uma proposição, não uma classe — ela não pode ser multiplicada nem somada. Só o til pode negá-la, na forma ~( … >> … )");
+      if(s[i] !== ")") throw new Error("falta fechar parêntese");
+      i++; return e;
+    }
     if(CL[c]){ i++; return {t:"lit", v:c}; }
     throw new Error("símbolo desconhecido: " + c);
   }
@@ -314,8 +343,14 @@ function produto(fs){
   return CL[h.v].subst + (partes.length ? " " + partes.join(" ") : "");
 }
 
+/* conta os tis empilhados sobre uma proposição e devolve a cópula lá dentro */
+function desdobrar(no){ var k = 0, x = no; while(x.t === "neg"){ k++; x = x.a; } return {tis:k, cop:x}; }
+
 function conjuntos(n){
   switch(n.t){
+    case "neg":
+      var d = desdobrar(n);
+      return conjuntos(d.cop.a) + (d.tis % 2 ? " ⊄ " : " ⊆ ") + conjuntos(d.cop.b);
     case "lit": return n.v;
     case "nao": return "∁" + env(n.a);
     case "prod": return n.f.map(env).join(" ∩ ");
@@ -337,7 +372,7 @@ function mostrarSimbolico(txt){
   try { n = analisar(txt); }
   catch(e){ alvo.innerHTML = '<p class="erro">Não consegui ler: ' + e.message + "</p>"; return; }
 
-  if(n.t === "cop"){ mostrarCopula(alvo, n); return; }
+  if(n.t === "cop" || n.t === "neg"){ mostrarCopula(alvo, n); return; }
 
   var ks = avaliar(n), bichos = nomear(ks);
   var art = genero(n) === "f" ? "uma " : "um ";
@@ -361,22 +396,45 @@ function mostrarSimbolico(txt){
   alvo.innerHTML = h;
 }
 
-function mostrarCopula(alvo, n){
+function mostrarCopula(alvo, no){
+  var d0 = desdobrar(no), n = d0.cop, negado = d0.tis % 2 === 1;
   var A = avaliar(n.a), B = avaliar(n.b);
   var fora = A.filter(function(k){ return B.indexOf(k) < 0; });
   var suj = pt(n.a), pre = pt(n.b);
-  var todo = genero(n.a) === "f" ? "Toda " : "Todo ";
+  var todo = genero(n.a) === "f" ? "toda " : "todo ";
   var artP = genero(n.b) === "f" ? "uma " : "um ";
+  var vacua = A.length === 0, copOk = fora.length === 0;
+  var vale = negado ? !copOk : copOk;
 
-  var h = '<span class="rot">em português</span><p class="pt">' + todo + suj + " é " + artP + pre + ".</p>" +
-          '<p class="forma">' + conjuntos(n) + "</p>" +
-          '<div class="exemplo"><span class="rot">valor de verdade</span>';
+  var frase = negado
+    ? "Nem " + todo + suj + " é " + artP + pre + "."
+    : maiuscula(todo) + suj + " é " + artP + pre + ".";
 
-  if(A.length === 0){
+  var h = '<span class="rot">em português</span><p class="pt">' + frase + "</p>" +
+          '<p class="forma">' + conjuntos(no) + "</p>";
+  if(d0.tis >= 2)
+    h += '<div class="alerta"><b>' + d0.tis + " negações empilhadas.</b> Aos pares elas se cancelam, então a frase acima é a leitura efetiva da expressão.</div>";
+  h += '<div class="exemplo"><span class="rot">valor de verdade</span>';
+
+  if(negado){
+    if(vale){
+      h += '<p class="veredito v-sim">verdadeiro</p>' +
+           '<p class="resto">Testemunha: ' + nomear(fora).map(function(b){ return b.n; }).join(", ") +
+           " — é " + suj + " e não é " + pre + ".</p>" +
+           '<div class="alerta"><b>Esta é a contraditória da universal.</b> Negar “todo S é P” não dá “nenhum S é P”, e sim “algum S não é P” — a proposição particular negativa, o <em>O</em> do quadrado das oposições. Basta uma testemunha para derrubar a universal.</div>';
+    } else if(vacua){
+      h += '<p class="veredito v-nao">falso</p>' +
+           '<p class="resto">Não há nenhum ' + suj + " no bestiário, então a universal é vacuamente verdadeira — e negá-la dá falso.</p>" +
+           '<div class="alerta"><b>Aqui a vacuidade morde duas vezes.</b> Sem sujeito, a universal não tem como falhar, e sua contraditória não tem como valer. É a mesma raiz da falácia existencial que invalida Darapti, Felapton, Bramantip e Fesapo.</div>';
+    } else {
+      h += '<p class="veredito v-nao">falso</p>' +
+           '<p class="resto">Todo ' + suj + " é mesmo " + pre + ", logo a negação não se sustenta.</p>";
+    }
+  } else if(vacua){
     h += '<p class="veredito v-vac">verdadeiro por vacuidade</p>' +
          '<p class="resto">Não há nenhum ' + suj + " no bestiário. Sem sujeito, não há como a afirmação falhar.</p>" +
          '<div class="alerta"><b>Este é o ponto que derruba nove silogismos.</b> Na leitura de Boole, uma afirmação universal sobre uma classe vazia é verdadeira. É por isso que “todo S é P” deixa de garantir que exista algum S — e Darapti, Felapton, Bramantip e Fesapo, junto com os cinco subalternos, perdem a validade.</div>';
-  } else if(fora.length === 0){
+  } else if(copOk){
     h += '<p class="veredito v-sim">verdadeiro</p>' +
          '<p class="resto">Os ' + A.length + " habitantes de " + suj + " estão todos em " + pre +
          ": " + nomear(A).map(function(b){ return b.n; }).join(", ") + ".</p>";
