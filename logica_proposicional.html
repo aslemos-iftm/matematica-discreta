@@ -200,16 +200,36 @@
     </div>
 
     <div class="chips">
-      <span class="rot" style="margin:0 .3rem 0 0;display:inline">exemplos</span>
+      <span class="rot" style="margin:0 .3rem 0 0;display:inline">classificação</span>
       <button class="chip" data-p="" data-c="p → (q → p)">EA1</button>
       <button class="chip" data-p="" data-c="(¬p → ¬q) → (q → p)">EA3</button>
       <button class="chip" data-p="" data-c="¬(p → p)">contradição</button>
       <button class="chip" data-p="" data-c="p → q">contingente</button>
       <button class="chip" data-p="p→q|q→r|s" data-c="p → r">premissa supérflua</button>
       <button class="chip" data-p="p|¬p" data-c="q">premissas inconsistentes</button>
+    </div>
+    <div class="chips">
+      <span class="rot" style="margin:0 .3rem 0 0;display:inline">com derivação</span>
+      <button class="chip" data-p="p → q|q → r" data-c="p → r">silogismo hipotético</button>
+      <button class="chip" data-p="¬p → ¬q|¬q → ¬r" data-c="r → p">contraposição encadeada</button>
+      <button class="chip" data-p="¬q → ¬p|p" data-c="q">contraposição e MP</button>
+      <button class="chip" data-p="¬p" data-c="p → q">ex falso condicional</button>
+      <button class="chip" data-p="p" data-c="(p → q) → q">asserção</button>
+      <button class="chip" data-p="p → (q → r)|q" data-c="p → r">descarga do meio</button>
+      <button class="chip" data-p="p → q" data-c="(r → p) → (r → q)">encadeamento à direita</button>
+      <button class="chip" data-p="(p → q) → r|q" data-c="r">antecedente por EA1</button>
+      <button class="chip" data-p="p|p → q|q → r|r → s" data-c="s">cadeia longa</button>
+    </div>
+    <div class="chips">
+      <span class="rot" style="margin:0 .3rem 0 0;display:inline">a busca falha</span>
+      <button class="chip" data-p="p → q|¬q" data-c="¬p">modus tollens</button>
+      <button class="chip" data-p="¬¬p" data-c="p">dupla negação</button>
+      <button class="chip" data-p="¬p → p" data-c="p">consequentia mirabilis</button>
       <button class="chip" data-p="p ∨ q|¬q" data-c="p">silogismo disjuntivo</button>
     </div>
   </div>
+
+  <div class="nota azul" style="margin-top:.9rem"><b>A última fileira é proposital.</b> Os quatro argumentos são válidos, e a ferramenta confirma isso — mas a busca não acha a derivação. Não é falha de implementação: todos eles exigem fórmulas que não aparecem no enunciado, e a seção sobre complexidade, mais abaixo, explica por quê. Compare com “contraposição encadeada”, que usa EA3 duas vezes e sai em nove linhas: o que separa os dois casos não é a dificuldade aparente.</div>
 
   <div class="saida" id="saida"></div>
 </section>
