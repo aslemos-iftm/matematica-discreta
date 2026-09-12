@@ -322,29 +322,53 @@ function adj(v, g){ return g === "f" ? CL[v].adjF : CL[v].adjM; }
 function pt(n){
   switch(n.t){
     case "lit": return CL[n.v].subst;
-    case "nao": return n.a.t === "lit" ? "não-" + CL[n.a.v].adjM : "o que não é " + pt(n.a);
+    case "nao": return n.a.t === "lit" ? "não-" + CL[n.a.v].adjM : "ser que não é " + negArg(n.a);
     case "uni": return pt(n.a) + " ou " + pt(n.b);
-    case "dif": return n.a.t === "dif"
-      ? pt(n.a) + " nem " + ptEnv(n.b)
-      : pt(n.a) + " que não é " + ptEnv(n.b);
+    case "dif": return diferenca(n);
     case "prod": return produto(n.f);
   }
   return "?";
 }
 /* o português não tem precedência: onde a expressão tinha parêntese, a frase também precisa */
-function ptEnv(n){ return (n.t === "uni" || n.t === "dif") ? "(" + pt(n) + ")" : pt(n); }
+/* A − M − V e A − (M+V) são a mesma classe: o português diz as duas com “nem … nem” */
+function baseDif(n){ return n.t === "dif" ? baseDif(n.a) : n; }
+function subtraendos(n, acc){ if(n.t === "dif"){ subtraendos(n.a, acc); acc.push(n.b); } return acc; }
+function diferenca(n){
+  var partes = [];
+  subtraendos(n, []).forEach(function(x){ if(x.t === "uni") achatarUni(x, partes); else partes.push(x); });
+  return pt(baseDif(n)) + (partes.length > 1
+    ? " que não é nem " + partes.map(pt).join(" nem ")
+    : " que não é " + ptEnv(partes[0]));
+}
+
+function achatarUni(n, acc){
+  if(n.t === "uni"){ achatarUni(n.a, acc); achatarUni(n.b, acc); } else acc.push(n);
+  return acc;
+}
+/* sob negação, o português usa concordância negativa: “não é nem A nem B” */
+function negArg(n){
+  if(n.t !== "uni") return ptEnv(n);
+  return "nem " + achatarUni(n, []).map(pt).join(" nem ");
+}
+
+/* união aninhada usa o correlativo “ou … ou …”, que é o parêntese que o português tem */
+function ptEnv(n){
+  if(n.t === "uni") return "ou " + achatarUni(n, []).map(pt).join(" ou ");
+  if(n.t === "dif") return "ser que é " + pt(n);
+  return pt(n);
+}
 function produto(fs){
   var h = cabeca(fs);
-  if(!h) return fs.map(pt).join(" e ");
-  var complexo = fs.some(function(x){ return x.t !== "lit" && !(x.t === "nao" && x.a.t === "lit"); });
-  if(complexo) return fs.map(ptEnv).join(" e ");
-  var g = CL[h.v].gen, partes = [];
+  if(!h) return "ser " + fs.map(function(x){ return "que é " + ptEnv(x); }).join(" e ");
+  var g = CL[h.v].gen, partes = [], relativas = [];
   fs.forEach(function(x){
     if(x === h) return;
     if(x.t === "lit") partes.push(adj(x.v, g));
-    else partes.push("não " + adj(x.a.v, g));
+    else if(x.t === "nao" && x.a.t === "lit") partes.push("não " + adj(x.a.v, g));
+    else relativas.push("que é " + ptEnv(x));   /* fator complexo vira oração relativa */
   });
-  return CL[h.v].subst + (partes.length ? " " + partes.join(" ") : "");
+  return CL[h.v].subst + (partes.length ? " " + partes.join(" ") : "") +
+         (relativas.length ? " " + relativas.join(" e ") : "");
 }
 
 /* conta os tis empilhados sobre uma proposição e devolve a cópula lá dentro */
@@ -465,61 +489,163 @@ function fraseDe(no){
 function norm(s){ return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); }
 var FORMAS = {};
 Object.keys(CL).forEach(function(k){ CL[k].formas.forEach(function(f){ FORMAS[f] = k; }); });
-var VAZIAS = ["um","uma","o","a","os","as","de","do","da","ser","seres","classe","the"];
+var LEVE = ["ser","seres","algo","aquilo","coisa","tudo","o","a","os","as","um","uma","aquele","aquela"];
+var IGN  = ["de","do","da","classe"];
+var VERBO = ["é","e","são","sao","seja","sejam"];
+
+function tokenizar(s){
+  return s.replace(/[.,;!?]/g," ").toLowerCase()
+          .replace(/n[ãa]o[-–]/g,"não ")
+          .split(/\s+/).filter(Boolean);
+}
+
+/* gramática do fragmento:
+     Uniao  := 'ou' Dif 'ou' Dif | 'nem' Dif 'nem' Dif | Dif ('ou' Dif)*
+     Dif    := Rel ( ('que'|'mas') 'não' V Rel )*        núcleo vazio ⇒ complemento
+     Rel    := Nucleo ( 'que' V Uniao )*
+     Nucleo := ( 'não'? Palavra )*                       justaposição ⇒ interseção      */
+function analisarPT(tk){
+  var i = 0;
+  function fim(){ return i >= tk.length; }
+  function w(k){ return tk[i + (k||0)]; }
+  function verbo(x){ return VERBO.indexOf(x) >= 0; }
+
+  /* o braço de um correlativo é só um núcleo: “ou” abre a coordenação
+     mas nada a fecha, então deixá-lo guloso engoliria o que vem depois */
+  function braco(){
+    var e = nucleo();
+    if(e === null) throw new Error("faltou um termo depois de “ou”/“nem”");
+    return e;
+  }
+  function correlativo(marca){
+    var s0 = i;
+    if(w() !== marca) return null;
+    i++;
+    var fs = [];
+    try { fs.push(braco()); } catch(e){ i = s0; return null; }
+    while(!fim() && w() === marca){
+      i++;
+      try { fs.push(braco()); } catch(e){ i = s0; return null; }
+    }
+    if(fs.length < 2){ i = s0; return null; }
+    return fs.reduce(function(a,b){ return {t:"uni", a:a, b:b}; });
+  }
+  function uniao(){
+    var c = correlativo("ou");
+    if(c) return c;
+    var d = correlativo("nem");
+    if(d) return {t:"nao", a:d};
+    var e = dif();
+    if(e === null) return null;
+    while(!fim() && w() === "ou"){
+      i++;
+      var d2 = dif();
+      if(d2 === null) throw new Error("faltou um termo depois de “ou”");
+      e = {t:"uni", a:e, b:d2};
+    }
+    return e;
+  }
+  function dif(){
+    var e = rel(true);
+    while(!fim() && (w() === "que" || w() === "mas") && w(1) === "não" && verbo(w(2))){
+      i += 3;
+      var d = argNeg();
+      if(d === null) throw new Error("faltou dizer o que vem depois de “não é”");
+      e = (e === null) ? {t:"nao", a:d} : {t:"dif", a:e, b:d};
+    }
+    return e;
+  }
+  /* depois de “não é”, um correlativo é argumento da negação já dada:
+     “não é nem A nem B” é concordância negativa, não dupla negação */
+  function argNeg(){
+    var d = correlativo("nem");
+    if(d) return d;                      /* “não é nem A nem B” já traz a negação no verbo */
+    var c = correlativo("ou");
+    if(c) return c;
+    return rel(false);            /* não engole “e que …”: isso é do nível de cima */
+  }
+  function rel(comE){
+    var e = nucleo();
+    while(!fim() && ((w() === "que" && verbo(w(1))) ||
+                     (comE && w() === "e" && w(1) === "que" && verbo(w(2))))){
+      i += (w() === "e") ? 3 : 2;
+      var d = uniao();
+      e = (e === null) ? d : {t:"prod", f:[e, d]};
+    }
+    return e;
+  }
+  function nucleo(){
+    var fs = [], neg = false;
+    while(!fim()){
+      var x = w(), b = norm(x);
+      if(x === "não"){ neg = true; i++; continue; }
+      if(LEVE.indexOf(b) >= 0 || IGN.indexOf(b) >= 0){ i++; continue; }
+      if(x === "e" && (w(1) === "não" || FORMAS[norm(w(1) || "")])){ i++; continue; }
+      if(FORMAS[b]){
+        var L = {t:"lit", v:FORMAS[b]};
+        fs.push(neg ? {t:"nao", a:L} : L);
+        neg = false; i++; continue;
+      }
+      break;
+    }
+    if(neg) throw new Error("“não” sem nada depois");
+    if(!fs.length) return null;
+    return fs.length === 1 ? fs[0] : {t:"prod", f:fs};
+  }
+
+  var r = uniao();
+  if(!fim()) throw new Error("não conheço a palavra “" + w() + "”");
+  if(r === null) throw new Error("não encontrei nenhuma classe");
+  return r;
+}
+
+/* de volta aos símbolos, com o mínimo de parênteses */
+function simb(n){
+  switch(n.t){
+    case "lit":  return n.v;
+    case "nao":  return "~" + envS(n.a, "nao");
+    case "prod": return n.f.map(function(x){ return envS(x, "prod"); }).join("");
+    case "uni":  return achatarUni(n, []).map(function(x){ return envS(x, "soma"); }).join(" + ");
+    case "dif":  return envS(n.a, "soma") + " - " + envS(n.b, "soma");
+  }
+  return "?";
+}
+function envS(n, ctx){
+  if(n.t === "lit") return n.v;
+  if(n.t === "nao") return simb(n);                                  /* ~X já vem fechado */
+  if(n.t === "prod") return ctx === "nao" ? "(" + simb(n) + ")" : simb(n);
+  return "(" + simb(n) + ")";
+}
+
+function termo(s){ return simb(analisarPT(tokenizar(s))); }
 
 function reverso(txt){
   var s = txt.replace(/[.,;!?]/g," ").replace(/\s+/g," ").trim().toLowerCase();
   var V = "(?:é|e|são|sao|seja|sejam)";
   var m;
 
-  /* não é o caso que P  →  ~(P) */
   m = s.match(/^n[ãa]o (?:é|e) (?:o caso|verdade) que\s+(.+)$/);
   if(m) return "~(" + reverso(m[1]) + ")";
 
-  /* nem todo X é Y  →  ~(X >> Y)   — a contraditória da universal afirmativa */
   m = s.match(new RegExp("^nem\\s+(?:todos?|todas?)\\s+(.+?)\\s+" + V + "\\s+(.+)$"));
-  if(m) return "~(" + rUniao(m[1]) + " >> " + rUniao(m[2]) + ")";
+  if(m) return "~(" + termo(m[1]) + " >> " + termo(m[2]) + ")";
 
-  /* todo X é Y  →  X >> Y */
   m = s.match(new RegExp("^(?:todos?|todas?)\\s+(.+?)\\s+" + V + "\\s+(.+)$"));
-  if(m) return rUniao(m[1]) + " >> " + rUniao(m[2]);
+  if(m) return termo(m[1]) + " >> " + termo(m[2]);
 
-  /* nenhum X é Y  →  X >> ~(Y) */
   m = s.match(new RegExp("^(?:nenhum|nenhuma|nenhuns|nenhumas)\\s+(.+?)\\s+" + V + "\\s+(.+)$"));
-  if(m) return rUniao(m[1]) + " >> ~(" + rUniao(m[2]) + ")";
+  if(m) return termo(m[1]) + " >> ~(" + termo(m[2]) + ")";
 
-  /* algum X não é Y  →  ~(X >> Y)   — tem de vir antes da forma afirmativa */
   m = s.match(new RegExp("^(?:algum|alguma|alguns|algumas)\\s+(.+?)\\s+n[ãa]o\\s+" + V + "\\s+(.+)$"));
-  if(m) return "~(" + rUniao(m[1]) + " >> " + rUniao(m[2]) + ")";
+  if(m) return "~(" + termo(m[1]) + " >> " + termo(m[2]) + ")";
 
-  /* algum X é Y  →  ~(X >> ~(Y))   — afirmar existência é negar uma universal */
   m = s.match(new RegExp("^(?:algum|alguma|alguns|algumas)\\s+(.+?)\\s+" + V + "\\s+(.+)$"));
-  if(m) return "~(" + rUniao(m[1]) + " >> ~(" + rUniao(m[2]) + "))";
+  if(m) return "~(" + termo(m[1]) + " >> ~(" + termo(m[2]) + "))";
 
-  if(/^(todos?|todas?|nenhum|nenhuma|nenhuns|nenhumas|algum|alguma|alguns|algumas|nem)\s/.test(s))
+  if(/^(todos?|todas?|nenhum|nenhuma|nenhuns|nenhumas|algum|alguma|alguns|algumas)\s/.test(s)
+     || /^nem\s+(todos?|todas?)\s/.test(s))
     throw new Error("reconheço “todo X é Y”, “nenhum X é Y”, “algum X é Y”, “algum X não é Y” e “nem todo X é Y” — com o verbo ser");
-  return rUniao(s);
-}
-function rUniao(s){ return s.split(/\s+ou\s+/).map(rDif).join(" + "); }
-function rDif(s){
-  var p = s.split(/\s+(?:que|mas)\s+n[ãa]o\s+(?:é|e|são|sao)\s+/);
-  return p.map(rProd).join(" - ");
-}
-function rProd(s){
-  var out = [], neg = false;
-  s.split(/\s+/).forEach(function(w){
-    if(!w) return;
-    if(/^n[ãa]o[-–]/.test(w)){ neg = true; w = w.replace(/^n[ãa]o[-–]/,""); }
-    else if(/^n[ãa]o$/.test(w)){ neg = true; return; }
-    var b = norm(w);
-    if(b === "e" || VAZIAS.indexOf(b) >= 0){ return; }
-    var L = FORMAS[b];
-    if(!L) throw new Error("não conheço a palavra “" + w + "”");
-    out.push((neg ? "~" : "") + L);
-    neg = false;
-  });
-  if(!out.length) throw new Error("não encontrei nenhuma classe");
-  return out.join("");
+  return termo(s);
 }
 
 function mostrarPt(txt){
