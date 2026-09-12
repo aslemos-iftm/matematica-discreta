@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lógica proposicional — Matemática Discreta · IFTM</title>
+<meta name="description" content="Cálculo proposicional: caracterização formal, o sistema axiomático de Łukasiewicz e uma ferramenta de classificação semântica de fórmulas.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f; --surface:#0d1119; --surface2:#111725;
+    --rule:#1b2230; --text:#e7eaf0; --muted:#868ea2;
+    --amber:#f5a623; --amber-dim:#8a5f16; --azul:#6fb3d2; --rosa:#d2789a; --verde:#7fd28e;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif:"IBM Plex Serif", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);
+       font-size:15px;line-height:1.68;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:62rem;margin:0 auto;padding:clamp(2.5rem,8vw,5rem) clamp(1.25rem,5vw,2.5rem) 4rem;}
+  .eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 1.1rem;}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,5.5vw,2.8rem);line-height:1.1;
+     letter-spacing:-.015em;margin:0;}
+  .lead{color:var(--muted);max-width:41rem;margin:1rem 0 0;}
+  section{margin-top:clamp(2.8rem,7vw,4rem);}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.4rem;margin:0 0 .2rem;}
+  .kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 .7rem;}
+  .sub{color:var(--muted);max-width:45rem;margin:0 0 1.3rem;font-size:.9rem;}
+
+  .cartao{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.3rem 1.4rem;}
+  .duas{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));}
+  .cartao h3{font-family:var(--serif);font-weight:400;font-size:1.1rem;margin:0 0 .6rem;color:var(--text);}
+  .cartao p{margin:.4rem 0 0;color:var(--muted);font-size:.85rem;}
+  .form{font-family:var(--serif);font-size:1.05rem;color:var(--azul);}
+  .gr{color:var(--amber);font-style:normal;}
+  ul.limpa{list-style:none;margin:.5rem 0 0;padding:0;}
+  ul.limpa li{padding:.35rem 0;border-top:1px solid var(--rule);font-size:.86rem;color:var(--muted);}
+  ul.limpa li b{color:var(--text);font-weight:400;font-family:var(--serif);font-size:1rem;}
+  ol.wff{margin:.4rem 0 0;padding-left:1.2rem;color:var(--muted);font-size:.86rem;}
+  ol.wff b{color:var(--text);font-weight:400;}
+
+  table{width:100%;border-collapse:collapse;font-size:.84rem;}
+  th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--rule);vertical-align:top;}
+  th{font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:400;}
+  tr:last-child td{border-bottom:0;}
+  td.n{color:var(--muted);width:2.2rem;}
+  td.fo{font-family:var(--serif);font-size:1rem;color:var(--azul);}
+  td.ju{color:var(--muted);font-size:.8rem;}
+  .tabela{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden;}
+
+  input[type=text]{font-family:var(--mono);font-size:1rem;width:100%;padding:.6rem .8rem;
+    background:var(--surface2);color:var(--text);border:1px solid var(--rule);border-radius:8px;}
+  input[type=text]:focus{outline:none;border-color:var(--amber);}
+  button{font-family:var(--mono);font-size:.85rem;padding:.6rem 1rem;background:var(--surface2);
+    color:var(--text);border:1px solid var(--rule);border-radius:8px;cursor:pointer;
+    transition:border-color .16s,color .16s;white-space:nowrap;}
+  button:hover,button:focus-visible{border-color:var(--amber);color:var(--amber);outline:none;}
+  button.primario{border-color:var(--amber-dim);color:var(--amber);}
+  button.x{padding:.6rem .75rem;color:var(--muted);}
+  button.x:hover{border-color:var(--rosa);color:var(--rosa);}
+
+  .prem{display:flex;gap:.5rem;margin-bottom:.5rem;align-items:center;}
+  .prem .idx{font-size:.75rem;color:var(--muted);width:1.6rem;text-align:right;flex:none;}
+  .acoes{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.3rem;}
+  .campo-conc{margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--rule);}
+  .rot{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.4rem;}
+  .chips{margin-top:.9rem;display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;}
+  .chip{font-size:.78rem;padding:.2rem .6rem;border-radius:20px;background:none;}
+
+  .saida{margin-top:1.2rem;}
+  .vered{font-family:var(--serif);font-size:1.9rem;line-height:1.2;margin:0;}
+  .v-sim{color:var(--verde);} .v-nao{color:var(--rosa);} .v-sat{color:var(--azul);} .v-inc{color:var(--amber);}
+  .seq{font-family:var(--serif);font-size:1.15rem;color:var(--text);margin:.5rem 0 0;}
+  .expl{color:var(--muted);font-size:.87rem;margin:.7rem 0 0;max-width:46rem;}
+  .bloco{margin-top:1.2rem;padding-top:1.1rem;border-top:1px solid var(--rule);}
+  .val{font-family:var(--serif);font-size:1rem;}
+  .val .t{color:var(--verde);} .val .f{color:var(--rosa);}
+  .lits{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;}
+  .lit{font-family:var(--serif);font-size:.95rem;padding:.2rem .7rem;border:1px solid var(--rule);
+       border-radius:20px;color:var(--azul);}
+  .erro{color:var(--rosa);font-size:.9rem;}
+  .nota{margin-top:1rem;padding:.85rem 1rem;border-left:2px solid var(--amber);background:var(--surface);
+        font-size:.83rem;color:var(--muted);border-radius:0 8px 8px 0;}
+  .nota b{color:var(--amber);font-weight:400;}
+  .nota.azul{border-left-color:var(--azul);} .nota.azul b{color:var(--azul);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">IFTM · Matemática Discreta</p>
+  <h1>Cálculo proposicional</h1>
+  <p class="lead">A caracterização formal, o sistema axiomático de Łukasiewicz, e uma ferramenta para classificar fórmulas diante de um conjunto de premissas.</p>
+</header>
+
+<section>
+  <p class="kicker">Definição</p>
+  <h2>Um sistema formal 𝓛 = ( <span class="gr">Α</span>, <span class="gr">Ω</span>, <span class="gr">Ζ</span>, <span class="gr">Ι</span> )</h2>
+  <p class="sub">Quatro conjuntos finitos. Nenhum deles diz o que as fórmulas significam — o significado virá depois, e por fora.</p>
+
+  <div class="duas">
+    <div class="cartao">
+      <h3><span class="gr">Α</span> — variáveis proposicionais</h3>
+      <p>Os símbolos atômicos: p, q, r, s. Suficientemente numerosos para a argumentação em vista, e nada além disso.</p>
+      <h3 style="margin-top:1.1rem"><span class="gr">Ω</span> — conetivos, repartidos por aridade</h3>
+      <p class="form" style="margin-top:.5rem">Ω = Ω₀ ∪ Ω₁ ∪ … ∪ Ω<sub>m</sub></p>
+      <p>Ω<sub>j</sub> reúne os símbolos de aridade j. Na versão usual: Ω₁ = { ¬ } e Ω₂ = { ∧, ∨, →, ↔ }; as constantes lógicas entram como Ω₀ = { 0, 1 }, isto é, operadores de aridade zero.</p>
+    </div>
+    <div class="cartao">
+      <h3><span class="gr">Ζ</span> — regras de transformação</h3>
+      <p>As regras de inferência: operações que produzem fórmulas a partir de fórmulas, por manipulação de forma.</p>
+      <h3 style="margin-top:1.1rem"><span class="gr">Ι</span> — pontos iniciais</h3>
+      <p>Os axiomas: as linhas que uma derivação pode escrever sem justificar.</p>
+      <h3 style="margin-top:1.1rem">Fórmulas bem formadas</h3>
+      <ol class="wff">
+        <li><b>Base:</b> todo elemento de Α é fórmula.</li>
+        <li>Se p₁ … p<sub>j</sub> são fórmulas e f ∈ Ω<sub>j</sub>, então f(p₁ … p<sub>j</sub>) é fórmula.</li>
+        <li><b>Fecho:</b> nada mais é fórmula.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="nota"><b>O fecho é a cláusula decisiva.</b> Sem ela, a definição diria quais objetos são fórmulas, mas não quais não são — e a verificação mecânica de uma prova deixaria de ser possível. É o que torna “ser fórmula” uma propriedade decidível.</div>
+</section>
+
+<section>
+  <p class="kicker">Exemplo</p>
+  <h2>O sistema 𝓛₁</h2>
+  <p class="sub">Um cálculo minúsculo: dois conetivos, uma regra, três esquemas de axioma. E, ainda assim, completo para toda a lógica clássica proposicional.</p>
+
+  <div class="duas">
+    <div class="cartao">
+      <h3>Os conjuntos</h3>
+      <ul class="limpa">
+        <li><b>Ω₀ = { f, v }</b> — constantes</li>
+        <li><b>Ω₁ = { ¬ }</b> — negação</li>
+        <li><b>Ω₂ = { → }</b> — implicação</li>
+        <li><b>Ζ = { modus ponens }</b><br>{ α → β, α } ⊢ β</li>
+      </ul>
+      <p style="margin-top:.9rem">Só isso. Conjunção, disjunção e bicondicional não estão em Ω — e não fazem falta, como diz a nota abaixo.</p>
+    </div>
+    <div class="cartao">
+      <h3><span class="gr">Ι</span> — os axiomas de Łukasiewicz</h3>
+      <ul class="limpa">
+        <li><b>EA1</b> &nbsp; α → (β → α)</li>
+        <li><b>EA2</b> &nbsp; (α → (β → γ)) → ((α → β) → (α → γ))</li>
+        <li><b>EA3</b> &nbsp; (¬α → ¬β) → (β → α)</li>
+      </ul>
+      <p style="margin-top:.9rem">São <em>esquemas</em>: cada um vale para quaisquer fórmulas α, β, γ. Um esquema é uma infinidade de axiomas escrita em uma linha.</p>
+    </div>
+  </div>
+
+  <div class="nota"><b>Por que bastam ¬ e →.</b> O par é funcionalmente completo: α ∧ β abrevia ¬(α → ¬β), α ∨ β abrevia ¬α → β, e α ↔ β abrevia a conjunção das duas implicações. A pobreza de Ω₂ não é limitação, é economia — e a ferramenta abaixo mostra a tradução sempre que você usar um conetivo de fora.</div>
+  <div class="nota azul"><b>EA3 é o que torna o sistema clássico.</b> Sem ele, com EA1 e EA2 apenas, obtém-se o fragmento implicativo positivo — que é intuicionista. A derivação do slide 15 não usa EA3 nenhuma vez: atravessa o exemplo inteiro sem sair da parte construtiva do sistema.</div>
+</section>
+
+<section>
+  <p class="kicker">Derivação</p>
+  <h2>Um exemplo de prova em 𝓛₁</h2>
+  <p class="sub">De p e (r → p) → (r → (p → s)), conclui-se r → s. Oito linhas, cada uma verificável sem entender do que se fala.</p>
+  <div class="tabela"><table>
+    <thead><tr><th>#</th><th>fórmula</th><th>justificativa</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td class="fo">p</td><td class="ju">premissa</td></tr>
+      <tr><td class="n">2</td><td class="fo">(r → p) → (r → (p → s))</td><td class="ju">premissa</td></tr>
+      <tr><td class="n">3</td><td class="fo">p → (r → p)</td><td class="ju">EA1, com α = p, β = r</td></tr>
+      <tr><td class="n">4</td><td class="fo">r → p</td><td class="ju">1, 3 — MP</td></tr>
+      <tr><td class="n">5</td><td class="fo">r → (p → s)</td><td class="ju">2, 4 — MP</td></tr>
+      <tr><td class="n">6</td><td class="fo">(r → (p → s)) → ((r → p) → (r → s))</td><td class="ju">EA2, com α = r, β = p, γ = s</td></tr>
+      <tr><td class="n">7</td><td class="fo">(r → p) → (r → s)</td><td class="ju">5, 6 — MP</td></tr>
+      <tr><td class="n">8</td><td class="fo">r → s</td><td class="ju">4, 7 — MP</td></tr>
+    </tbody>
+  </table></div>
+  <div class="nota"><b>Não há suposição nem descarga.</b> Em sistema de Hilbert não se pode “supor r e derivar s”: as oito linhas são o preço de não ter essa manobra. O teorema da dedução — que autoriza passar de Γ ∪ {α} ⊢ β para Γ ⊢ α → β — é um <em>metateorema</em>, demonstrado sobre o sistema, não uma regra dentro dele.</div>
+</section>
+
+<section>
+  <p class="kicker">Ferramenta</p>
+  <h2>Classificar uma fórmula</h2>
+  <p class="sub">Acrescente premissas — ou nenhuma, e valem só os axiomas. Escreva a conclusão e veja em que categoria ela cai. Aceita ¬ ~ !, → -&gt; =&gt;, ∧ &amp; /\, ∨ | \/, ↔ &lt;-&gt;, parênteses, e as constantes f e v.</p>
+
+  <div class="cartao">
+    <span class="rot">premissas &nbsp;<span style="text-transform:none;letter-spacing:0">(Γ)</span></span>
+    <div id="lista"></div>
+    <div class="acoes">
+      <button id="add">+ premissa</button>
+      <button id="zerar">sem premissas</button>
+      <button id="exemplo">carregar o exemplo do slide 15</button>
+    </div>
+
+    <div class="campo-conc">
+      <span class="rot">conclusão &nbsp;<span style="text-transform:none;letter-spacing:0">(φ)</span></span>
+      <div class="prem">
+        <span class="idx">⊨</span>
+        <input type="text" id="conc" value="r → s" spellcheck="false" aria-label="conclusão">
+        <button class="primario" id="ir">classificar</button>
+      </div>
+    </div>
+
+    <div class="chips">
+      <span class="rot" style="margin:0 .3rem 0 0;display:inline">exemplos</span>
+      <button class="chip" data-p="" data-c="p → (q → p)">EA1</button>
+      <button class="chip" data-p="" data-c="(¬p → ¬q) → (q → p)">EA3</button>
+      <button class="chip" data-p="" data-c="¬(p → p)">contradição</button>
+      <button class="chip" data-p="" data-c="p → q">contingente</button>
+      <button class="chip" data-p="p→q|q→r|s" data-c="p → r">premissa supérflua</button>
+      <button class="chip" data-p="p|¬p" data-c="q">premissas inconsistentes</button>
+      <button class="chip" data-p="p ∨ q|¬q" data-c="p">silogismo disjuntivo</button>
+    </div>
+  </div>
+
+  <div class="saida" id="saida"></div>
+</section>
+
+<section>
+  <p class="kicker">A ponte</p>
+  <h2>Duas perguntas que coincidem</h2>
+  <div class="duas">
+    <div class="cartao">
+      <h3>Γ ⊢ φ &nbsp;— sintático</h3>
+      <p>Existe uma sequência finita de fórmulas, cada uma axioma, premissa ou resultado de modus ponens, terminando em φ. É a pergunta que a derivação do slide 15 responde. Decidir isso por busca é caro; verificar uma prova pronta é trivial.</p>
+    </div>
+    <div class="cartao">
+      <h3>Γ ⊨ φ &nbsp;— semântico</h3>
+      <p>Toda valoração que torna todas as premissas verdadeiras torna φ verdadeira. É a pergunta que a ferramenta acima responde, por exaustão das linhas da tabela de verdade. Decidir isso é mecânico; não produz prova alguma.</p>
+    </div>
+  </div>
+  <div class="nota"><b>Correção e completude dizem que as duas coincidem.</b> Γ ⊢ φ se e somente se Γ ⊨ φ. É por isso que a ferramenta pode decidir semanticamente e ainda assim afirmar algo sobre 𝓛₁: quando ela diz que φ se segue, está garantido que existe uma derivação ao modo do slide 15 — ainda que encontrá-la seja outro problema, e bem mais difícil.</div>
+</section>
+
+<section>
+  <p class="kicker">Complexidade</p>
+  <h2>Por que achar é mais difícil que conferir</h2>
+  <p class="sub">Quando a ferramenta não encontra a derivação, o motivo não é preguiça do algoritmo. É uma propriedade do sistema — e ela tem nome, tem teorema, e reaparece em lugares que nada têm a ver com lógica.</p>
+
+  <div class="duas">
+    <div class="cartao">
+      <h3>A propriedade da subfórmula</h3>
+      <p>Sistemas de Hilbert não a têm. A demonstração de <span class="form">¬¬p → p</span> precisa passar por <span class="form">¬¬¬p</span>, que não é subfórmula nem das premissas nem da conclusão: a prova tem de <em>inventar</em> material ausente do enunciado. Enquanto a busca apenas recombina o que aparece, jamais chega lá.</p>
+      <p>Gentzen resolveu isso em 1934. A eliminação do corte garante que toda demonstração no cálculo de sequentes pode ser refeita usando somente subfórmulas do que se quer provar — e aí o espaço de busca vira finito e dirigido. É por isso que nenhum provador automático usa sistema de Hilbert: usam tableaux ou resolução, que herdam essa propriedade.</p>
+      <p><b style="color:var(--text);font-weight:400">Definir e achar são virtudes distintas.</b> 𝓛₁ é excelente para dizer o que <em>é</em> uma prova, e péssimo para encontrar uma.</p>
+    </div>
+
+    <div class="cartao">
+      <h3>Decidível — e ainda assim duro</h3>
+      <p>Não há indecidibilidade aqui: a tabela de verdade sempre termina, e a ferramenta acima sempre responde. O problema é o custo. Com 12 variáveis já são 4096 linhas, e o crescimento é exponencial.</p>
+      <p>Mas o ponto fino é outro. Conferir a derivação do slide 15 leva segundos; encontrá-la custou trabalho. Essa assimetria entre <em>verificar um certificado curto</em> e <em>produzi-lo</em> não é uma curiosidade da lógica: é a definição de NP. O aluno que percebe isso na tela já entendeu a intuição antes de ver a definição formal.</p>
+    </div>
+
+    <div class="cartao">
+      <h3>O mesmo padrão, noutro lugar</h3>
+      <p>Na página do <a href="reticulado_divisores.html" style="color:var(--azul)">reticulado dos divisores</a>, o contador de cruzamentos exibe o mesmo fenômeno em roupa geométrica: minimizar cruzamentos num desenho por camadas é NP-difícil, mesmo com a ordem de uma das camadas já fixada.</p>
+      <p>E a heurística usada lá — ordenar cada camada pela mediana dos vizinhos — é exatamente a que Eades e Wormald propuseram no artigo em que provaram a dificuldade, com razão de aproximação 3. Ela acerta o ótimo nos casos pequenos daquela página não por esperteza, mas por serem pequenos: a conferência foi por força bruta.</p>
+      <p style="font-size:.78rem;margin-top:.8rem">P. Eades, N. C. Wormald. <em>Edge crossings in drawings of bipartite graphs.</em> Algorithmica 11 (1994), 379–403.</p>
+    </div>
+  </div>
+
+  <div class="nota"><b>Não é uma lição sobre lógica.</b> Dois problemas sem parentesco aparente — achar uma prova, desenhar um reticulado — exibem a mesma distância entre definir bem e resolver. Boa parte da matemática discreta consiste justamente em medir essa distância com precisão, em vez de supô-la pequena.</div>
+  <div class="nota azul"><b>E a trilha continua em aberto.</b> Se existisse um sistema de demonstração em que toda tautologia tivesse prova de tamanho polinomial, seguiria que NP = coNP. A pergunta está posta desde Cook e Reckhow, em 1979, e ninguém a respondeu. O que você fez acima ao procurar uma derivação é, em miniatura, o problema que a área inteira não resolveu.</div>
+</section>
+
+<footer style="margin:3rem 0 0;padding:1.4rem 0 0;border-top:1px solid #1b2230;
+               font-size:.76rem;line-height:1.6;color:#868ea2;">
+  <style>
+    .voltar-md{color:#868ea2;text-decoration:none;border-bottom:1px solid #1b2230;
+               transition:color .16s,border-color .16s;}
+    .voltar-md:hover,.voltar-md:focus-visible{color:#f5a623;border-color:#f5a623;}
+    .voltar-md .seta{display:inline-block;transition:transform .16s;}
+    .voltar-md:hover .seta{transform:translateX(-3px);}
+  </style>
+  <a class="voltar-md" href="index.html"><span class="seta" aria-hidden="true">←</span> Matemática Discreta</a>
+  · Prof. André Lemos · IFTM Campus Uberlândia Centro
+</footer>
+
+</div>
+<script>
+(function(){
+"use strict";
+/* ---------- analisador ---------- */
+var CONST = {f:false, v:true, "0":false, "1":true, "⊥":false, "⊤":true, F:false, V:true};
+
+function tokenizar(s){
+  var t = [], i = 0;
+  var mapa = [["<->","↔"],["<=>","↔"],["->","→"],["=>","→"],["/\\","∧"],["\\/","∨"],
+              ["&&","∧"],["||","∨"],["&","∧"],["|","∨"],["~","¬"],["!","¬"],["≡","↔"]];
+  s = s.replace(/\s+/g," ");
+  for(var k=0;k<mapa.length;k++) s = s.split(mapa[k][0]).join(mapa[k][1]);
+  while(i < s.length){
+    var c = s[i];
+    if(c === " "){ i++; continue; }
+    if("¬∧∨→↔()".indexOf(c) >= 0){ t.push(c); i++; continue; }
+    if(/[A-Za-z0-9⊥⊤]/.test(c)){
+      var j = i; while(j < s.length && /[A-Za-z0-9_⊥⊤]/.test(s[j])) j++;
+      t.push(s.slice(i,j)); i = j; continue;
+    }
+    throw new Error("símbolo inesperado: “" + c + "”");
+  }
+  return t;
+}
+
+function analisar(txt){
+  var t = tokenizar(txt), i = 0;
+  function fim(){ return i >= t.length; }
+  function w(){ return t[i]; }
+  function bicond(){
+    var e = impl();
+    while(!fim() && w() === "↔"){ i++; e = {t:"↔", a:e, b:impl()}; }
+    return e;
+  }
+  function impl(){
+    var e = disj();
+    if(!fim() && w() === "→"){ i++; return {t:"→", a:e, b:impl()}; }  /* associa à direita */
+    return e;
+  }
+  function disj(){
+    var e = conj();
+    while(!fim() && w() === "∨"){ i++; e = {t:"∨", a:e, b:conj()}; }
+    return e;
+  }
+  function conj(){
+    var e = neg();
+    while(!fim() && w() === "∧"){ i++; e = {t:"∧", a:e, b:neg()}; }
+    return e;
+  }
+  function neg(){
+    if(!fim() && w() === "¬"){ i++; return {t:"¬", a:neg()}; }
+    return atomo();
+  }
+  function atomo(){
+    if(fim()) throw new Error("fórmula incompleta");
+    var c = w();
+    if(c === "("){ i++; var e = bicond(); if(w() !== ")") throw new Error("falta fechar parêntese"); i++; return e; }
+    if(")¬∧∨→↔".indexOf(c) >= 0) throw new Error("faltou uma fórmula antes de “" + c + "”");
+    i++;
+    if(Object.prototype.hasOwnProperty.call(CONST, c)) return {t:"const", v:CONST[c], nome:c};
+    if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(c)) throw new Error("nome inválido: “" + c + "”");
+    return {t:"var", v:c};
+  }
+  var r = bicond();
+  if(!fim()) throw new Error("sobrou “" + t.slice(i).join(" ") + "”");
+  return r;
+}
+
+/* ---------- utilidades ---------- */
+function vars(n, acc){
+  acc = acc || [];
+  if(n.t === "var"){ if(acc.indexOf(n.v) < 0) acc.push(n.v); }
+  else if(n.a){ vars(n.a, acc); if(n.b) vars(n.b, acc); }
+  return acc;
+}
+function aval(n, at){
+  switch(n.t){
+    case "var":   return !!at[n.v];
+    case "const": return n.v;
+    case "¬": return !aval(n.a, at);
+    case "∧": return aval(n.a, at) && aval(n.b, at);
+    case "∨": return aval(n.a, at) || aval(n.b, at);
+    case "→": return !aval(n.a, at) || aval(n.b, at);
+    case "↔": return aval(n.a, at) === aval(n.b, at);
+  }
+}
+var PREC = {"↔":1, "→":2, "∨":3, "∧":4, "¬":5};
+function mostrar(n, ctx){
+  ctx = ctx || 0;
+  var s, p;
+  if(n.t === "var") return n.v;
+  if(n.t === "const") return n.nome || (n.v ? "v" : "f");
+  if(n.t === "¬") return "¬" + mostrar(n.a, PREC["¬"]);
+  p = PREC[n.t];
+  /* → associa à direita, mas os slides escrevem tudo com parênteses: mantemos */
+  s = mostrar(n.a, p + 1) + " " + n.t + " " + mostrar(n.b, n.t === "→" ? p + 1 : p + 1);
+  return p < ctx ? "(" + s + ")" : s;
+}
+/* tradução para o fragmento {¬, →} de 𝓛₁ */
+function paraL1(n){
+  switch(n.t){
+    case "var": case "const": return n;
+    case "¬": return {t:"¬", a:paraL1(n.a)};
+    case "→": return {t:"→", a:paraL1(n.a), b:paraL1(n.b)};
+    case "∧": return {t:"¬", a:{t:"→", a:paraL1(n.a), b:{t:"¬", a:paraL1(n.b)}}};
+    case "∨": return {t:"→", a:{t:"¬", a:paraL1(n.a)}, b:paraL1(n.b)};
+    case "↔": return paraL1({t:"∧", a:{t:"→",a:n.a,b:n.b}, b:{t:"→",a:n.b,b:n.a}});
+  }
+}
+function foraDeL1(n){
+  if(n.t === "∧" || n.t === "∨" || n.t === "↔") return true;
+  if(n.a && foraDeL1(n.a)) return true;
+  if(n.b && foraDeL1(n.b)) return true;
+  return false;
+}
+
+/* ---------- classificação semântica ---------- */
+function classificar(premTxt, phiTxt){
+  var prem = premTxt.map(function(t,k){
+    try { return analisar(t); } catch(e){ throw new Error("premissa " + (k+1) + ": " + e.message); }
+  });
+  var phi;
+  try { phi = analisar(phiTxt); } catch(e){ throw new Error("conclusão: " + e.message); }
+
+  var V = [];
+  prem.forEach(function(p){ vars(p, V); });
+  vars(phi, V);
+  if(V.length > 12) throw new Error("são " + V.length + " variáveis; o limite desta página é 12 (4096 linhas)");
+  var N = 1 << V.length;
+
+  function vetor(n){
+    var out = new Array(N), at = {};
+    for(var r = 0; r < N; r++){
+      for(var j = 0; j < V.length; j++) at[V[j]] = !!((r >> j) & 1);
+      out[r] = aval(n, at);
+    }
+    return out;
+  }
+  var vp = prem.map(vetor), vf = vetor(phi);
+  var vVar = V.map(function(_,j){
+    var o = new Array(N);
+    for(var r = 0; r < N; r++) o[r] = !!((r >> j) & 1);
+    return o;
+  });
+
+  function inter(vs){
+    var o = new Array(N);
+    for(var r = 0; r < N; r++){ o[r] = true; for(var k = 0; k < vs.length; k++) if(!vs[k][r]){ o[r] = false; break; } }
+    return o;
+  }
+  function algum(v){ for(var r = 0; r < N; r++) if(v[r]) return r; return -1; }
+  function implica(mod, alvo, sinal){
+    for(var r = 0; r < N; r++) if(mod[r] && alvo[r] !== sinal) return false;
+    return true;
+  }
+
+  var mod = inter(vp);
+  var algumModelo = algum(mod);
+  var res = { vars:V, N:N, prem:prem, phi:phi, mod:mod, qtd:0, foraL1:foraDeL1(phi) };
+  for(var r = 0; r < N; r++) if(mod[r]) res.qtd++;
+
+  function linha(r){
+    var o = {};
+    for(var j = 0; j < V.length; j++) o[V[j]] = !!((r >> j) & 1);
+    return o;
+  }
+
+  /* premissas inconsistentes: tudo se segue */
+  if(algumModelo < 0){
+    res.veredito = "inconsistente";
+    res.mus = minimo(prem.length, function(sub){
+      return algum(inter(sub.map(function(k){ return vp[k]; }))) < 0;
+    });
+    return res;
+  }
+
+  var verd = implica(mod, vf, true), fals = implica(mod, vf, false);
+  res.veredito = verd ? "verdadeira" : (fals ? "falsa" : "satisfativel");
+  res.testemunhaV = null; res.testemunhaF = null;
+  for(var r = 0; r < N; r++) if(mod[r]){
+    if(vf[r] && res.testemunhaV === null) res.testemunhaV = linha(r);
+    if(!vf[r] && res.testemunhaF === null) res.testemunhaF = linha(r);
+  }
+
+  if(verd || fals){
+    var sinal = verd;
+    res.nucleos = minimo(prem.length, function(sub){
+      return implica(inter(sub.map(function(k){ return vp[k]; })), vf, sinal);
+    });
+  } else {
+    res.adicoes = { true: literaisMinimos(true), false: literaisMinimos(false) };
+  }
+  return res;
+
+  /* menor subconjunto de premissas que já basta */
+  function minimo(m, ok){
+    for(var tam = 0; tam <= m; tam++){
+      var achados = [];
+      combin(m, tam, function(sub){ if(ok(sub)) achados.push(sub.slice()); });
+      if(achados.length) return achados;
+    }
+    return [];
+  }
+  function combin(m, tam, f){
+    var sub = [];
+    (function rec(inicio){
+      if(sub.length === tam){ f(sub); return; }
+      for(var k = inicio; k < m; k++){ sub.push(k); rec(k+1); sub.pop(); }
+    })(0);
+  }
+  /* menor conjunto de literais que decide φ, mantendo Γ satisfatível */
+  function literaisMinimos(sinal){
+    for(var tam = 1; tam <= Math.min(3, V.length); tam++){
+      var achados = [];
+      combin(V.length, tam, function(idx){
+        for(var mask = 0; mask < (1 << tam); mask++){
+          var vs = [mod], rot = [];
+          for(var q = 0; q < tam; q++){
+            var pos = !!((mask >> q) & 1);
+            var vv = vVar[idx[q]];
+            if(pos) vs.push(vv);
+            else vs.push(vv.map(function(x){ return !x; }));
+            rot.push((pos ? "" : "¬") + V[idx[q]]);
+          }
+          var m2 = inter(vs);
+          if(algum(m2) >= 0 && implica(m2, vf, sinal)) achados.push(rot.join(", "));
+        }
+      });
+      if(achados.length) return achados;
+    }
+    return [];
+  }
+}
+
+
+function k(n){ return mostrar(n); }
+function imp(a,b){ return {t:"→", a:a, b:b}; }
+function neg(a){ return {t:"¬", a:a}; }
+function ehImp(n){ return n.t === "→"; }
+function ehNeg(n){ return n.t === "¬"; }
+
+function subformulas(n, acc, vis){
+  acc = acc || []; vis = vis || {};
+  var key = k(n);
+  if(!vis[key]){ vis[key] = true; acc.push(n); }
+  if(n.a) subformulas(n.a, acc, vis);
+  if(n.b) subformulas(n.b, acc, vis);
+  return acc;
+}
+
+/* busca para a frente: instâncias de axioma + modus ponens, com retrotraço */
+function provar(premTxt, alvoNode, limite){
+  limite = limite || {rodadas:7, teto:9000, ms:1500};
+  var t0 = Date.now();
+  var prem = premTxt.map(analisar);
+
+  var S = {};            /* chave → registro */
+  var ordem = [];
+  function por(node, reg){
+    var key = k(node);
+    if(S[key]) return false;
+    reg.node = node; reg.key = key;
+    S[key] = reg; ordem.push(reg);
+    return true;
+  }
+
+  prem.forEach(function(p,i){ por(p, {tipo:"premissa", i:i}); });
+
+  /* reservatório: subfórmulas das premissas e do alvo */
+  var pool = [], vis = {};
+  prem.forEach(function(p){ subformulas(p, pool, vis); });
+  subformulas(alvoNode, pool, vis);
+
+  /* negações de um nível ampliam o alcance de EA3 */
+  var base = pool.slice();
+  base.forEach(function(x){ if(!ehNeg(x)) pool.push(neg(x)); });
+
+  /* instâncias geradas do reservatório: não dependem do que já foi derivado */
+  var L = pool.length;
+  for(var i = 0; i < L; i++)
+    for(var j = 0; j < L; j++){
+      por(imp(pool[i], imp(pool[j], pool[i])),
+          {tipo:"axioma", ax:"EA1", inst:{"α":k(pool[i]), "β":k(pool[j])}});
+      por(imp(imp(neg(pool[i]), neg(pool[j])), imp(pool[j], pool[i])),
+          {tipo:"axioma", ax:"EA3", inst:{"α":k(pool[i]), "β":k(pool[j])}});
+    }
+  var Lm = Math.min(L, 7);
+  for(var i = 0; i < Lm; i++)
+    for(var j = 0; j < Lm; j++)
+      for(var g = 0; g < Lm; g++)
+        por(imp(imp(pool[i], imp(pool[j], pool[g])), imp(imp(pool[i], pool[j]), imp(pool[i], pool[g]))),
+            {tipo:"axioma", ax:"EA2", inst:{"α":k(pool[i]), "β":k(pool[j]), "γ":k(pool[g])}});
+
+  if(S[k(alvoNode)]) return extrair(alvoNode);
+
+  for(var rodada = 0; rodada < limite.rodadas; rodada++){
+    var antes = ordem.length, novos = 0;
+
+    /* EA2 a partir de toda fórmula da forma α → (β → γ) */
+    for(var x = 0; x < antes; x++){
+      var A = ordem[x].node;
+      if(ehImp(A) && ehImp(A.b)){
+        var al = A.a, be = A.b.a, ga = A.b.b;
+        if(por(imp(imp(al, imp(be, ga)), imp(imp(al, be), imp(al, ga))),
+               {tipo:"axioma", ax:"EA2", inst:{"α":k(al), "β":k(be), "γ":k(ga)}})) novos++;
+      }
+      /* EA3 a partir de toda fórmula da forma ¬α → ¬β */
+      if(ehImp(A) && ehNeg(A.a) && ehNeg(A.b)){
+        var a3 = A.a.a, b3 = A.b.a;
+        if(por(imp(imp(neg(a3), neg(b3)), imp(b3, a3)),
+               {tipo:"axioma", ax:"EA3", inst:{"α":k(a3), "β":k(b3)}})) novos++;
+      }
+    }
+
+    /* modus ponens */
+    var atual = ordem.length;
+    for(var y = 0; y < atual; y++){
+      var I = ordem[y].node;
+      if(!ehImp(I)) continue;
+      var ka = k(I.a);
+      if(S[ka]){
+        if(por(I.b, {tipo:"mp", de:[ka, ordem[y].key]})) novos++;
+        if(S[k(alvoNode)]) return extrair(alvoNode);
+      }
+    }
+
+    if(!novos || ordem.length > limite.teto || Date.now() - t0 > limite.ms) break;
+  }
+  return S[k(alvoNode)] ? extrair(alvoNode) : null;
+
+  function extrair(alvo){
+    var precisa = {}, pilha = [k(alvo)];
+    while(pilha.length){
+      var key = pilha.pop();
+      if(precisa[key]) continue;
+      precisa[key] = true;
+      var r = S[key];
+      if(r && r.tipo === "mp") r.de.forEach(function(d){ pilha.push(d); });
+    }
+    var linhas = ordem.filter(function(r){ return precisa[r.key]; });
+    /* ordena topologicamente: uma linha só entra depois das que a justificam */
+    var pronto = {}, saida = [], mudou = true;
+    while(mudou){
+      mudou = false;
+      linhas.forEach(function(r){
+        if(pronto[r.key]) return;
+        if(r.tipo === "mp" && !(pronto[r.de[0]] && pronto[r.de[1]])) return;
+        pronto[r.key] = true; saida.push(r); mudou = true;
+      });
+    }
+    var num = {};
+    saida.forEach(function(r,i){ num[r.key] = i + 1; });
+    return saida.map(function(r,i){
+      var just;
+      if(r.tipo === "premissa") just = "premissa";
+      else if(r.tipo === "axioma"){
+        var ps = Object.keys(r.inst).map(function(g){ return g + " = " + r.inst[g]; }).join(", ");
+        just = r.ax + ", com " + ps;
+      } else just = num[r.de[0]] + ", " + num[r.de[1]] + " — MP";
+      return {n:i+1, f:mostrar(r.node), just:just};
+    });
+  }
+}
+
+/* ================= interface ================= */
+
+var lista = document.getElementById("lista");
+var saida = document.getElementById("saida");
+var conc  = document.getElementById("conc");
+
+function linhaPremissa(valor){
+  var d = document.createElement("div");
+  d.className = "prem";
+  d.innerHTML = '<span class="idx"></span><input type="text" spellcheck="false" aria-label="premissa">' +
+                '<button class="x" title="remover">×</button>';
+  d.querySelector("input").value = valor || "";
+  d.querySelector("button").addEventListener("click", function(){ d.remove(); renumerar(); });
+  d.querySelector("input").addEventListener("keydown", function(e){ if(e.key === "Enter") rodar(); });
+  lista.appendChild(d);
+  renumerar();
+  return d;
+}
+function renumerar(){
+  Array.prototype.forEach.call(lista.querySelectorAll(".prem"), function(d,k){
+    d.querySelector(".idx").textContent = (k+1) + ".";
+  });
+}
+function premissas(){
+  return Array.prototype.map.call(lista.querySelectorAll("input"), function(i){ return i.value.trim(); })
+              .filter(function(x){ return x.length; });
+}
+function definir(ps, c){
+  lista.innerHTML = "";
+  (ps || []).forEach(function(p){ linhaPremissa(p); });
+  if(!ps || !ps.length) linhaPremissa("");
+  conc.value = c;
+  rodar();
+}
+
+/* ================= apresentação ================= */
+
+function fmt(n){ return mostrar(n); }
+function seq(prem, phi, vale){
+  var g = prem.length ? prem.map(fmt).join(", &nbsp;") : "∅";
+  return g + " &nbsp;" + (vale ? "⊨" : "⊭") + "&nbsp; " + fmt(phi);
+}
+function valoracao(at, vs){
+  return vs.map(function(x){
+    return x + " = <span class=\"" + (at[x] ? "t" : "f") + "\">" + (at[x] ? "v" : "f") + "</span>";
+  }).join("&nbsp; · &nbsp;");
+}
+/* γ₁ → (γ₂ → … → (γₙ → φ)) : o teorema que o teorema da dedução entrega */
+function cadeia(gs, phi){
+  var n = {t:"→", a:null, b:phi};
+  if(!gs.length) return fmt(phi);
+  var r = phi;
+  for(var k = gs.length - 1; k >= 0; k--) r = {t:"→", a:gs[k], b:r};
+  return fmt(r);
+}
+
+function rodar(){
+  var ps = premissas(), c = conc.value.trim();
+  if(!c){ saida.innerHTML = '<p class="erro">Escreva uma conclusão.</p>'; return; }
+  var r;
+  try { r = classificar(ps, c); }
+  catch(e){ saida.innerHTML = '<div class="cartao"><p class="erro">' + e.message + "</p></div>"; return; }
+
+  var h = '<div class="cartao">';
+
+  if(r.veredito === "inconsistente"){
+    h += '<p class="vered v-inc">premissas inconsistentes</p>' +
+         '<p class="seq">' + seq(r.prem, r.phi, true) + "</p>" +
+         '<p class="expl">Nenhuma valoração satisfaz todas as premissas ao mesmo tempo. Como não há modelo algum de Γ, a condição “toda valoração que satisfaz Γ satisfaz φ” vale por vacuidade: <b>qualquer</b> fórmula se segue, e a sua também. O sistema não distingue mais nada.</p>';
+    if(r.mus && r.mus.length){
+      h += '<div class="bloco"><span class="rot">subconjunto inconsistente mínimo</span>';
+      h += r.mus.slice(0,3).map(function(sub){
+        return '<p class="val">{ ' + sub.map(function(k){ return fmt(r.prem[k]); }).join(", &nbsp;") + " }</p>";
+      }).join("");
+      h += '<p class="expl">Basta esse recorte para produzir a contradição; as demais premissas não participam.</p></div>';
+    }
+    h += '<div class="nota"><b>Ex falso quodlibet.</b> Esta é a razão técnica pela qual a consistência importa tanto no programa de Hilbert: um sistema inconsistente demonstra tudo, e demonstrar tudo é não demonstrar nada.</div>';
+    saida.innerHTML = h + "</div>";
+    return;
+  }
+
+  var semPrem = r.prem.length === 0;
+  var titulo, classe, expl;
+
+  if(r.veredito === "verdadeira"){
+    classe = "v-sim";
+    titulo = semPrem ? "tautologia" : "verdadeira, dadas as premissas";
+    expl = semPrem
+      ? "Verdadeira em todas as " + r.N + " valorações possíveis. Por completude, é um teorema de 𝓛₁: existe uma derivação a partir de EA1–EA3 usando apenas modus ponens."
+      : "Das " + r.N + " valorações, " + r.qtd + " satisfazem todas as premissas — e em todas elas φ é verdadeira.";
+  } else if(r.veredito === "falsa"){
+    classe = "v-nao";
+    titulo = semPrem ? "contradição" : "falsa, dadas as premissas";
+    expl = semPrem
+      ? "Falsa em todas as " + r.N + " valorações. Sua negação é tautologia, e portanto teorema de 𝓛₁."
+      : "Nas " + r.qtd + " valorações que satisfazem Γ, φ é falsa em todas. Ou seja, Γ ⊨ ¬φ.";
+  } else {
+    classe = "v-sat";
+    titulo = semPrem ? "apenas satisfatível" : "indecidida pelas premissas";
+    expl = semPrem
+      ? "Verdadeira em algumas valorações e falsa em outras: nem tautologia, nem contradição. Contingente."
+      : "Das " + r.qtd + " valorações que satisfazem Γ, algumas tornam φ verdadeira e outras a tornam falsa. As premissas são compatíveis com φ e com ¬φ — não bastam para decidir.";
+  }
+
+  h += '<p class="vered ' + classe + '">' + titulo + "</p>" +
+       '<p class="seq">' + seq(r.prem, r.phi, r.veredito === "verdadeira") + "</p>" +
+       '<p class="expl">' + expl + "</p>";
+
+  if(r.foraL1){
+    h += '<div class="nota azul"><b>Fora do alfabeto de 𝓛₁.</b> A fórmula usa conetivos que não estão em Ω₂ = { → }. Na linguagem do sistema ela se escreve<br><span class="form">' +
+         fmt(paraL1(r.phi)) + "</span></div>";
+  }
+
+  /* testemunhas */
+  if(r.veredito === "satisfativel"){
+    h += '<div class="bloco"><span class="rot">testemunhas</span>' +
+         '<p class="val">φ verdadeira &nbsp;&nbsp; ' + valoracao(r.testemunhaV, r.vars) + "</p>" +
+         '<p class="val">φ falsa &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' + valoracao(r.testemunhaF, r.vars) + "</p></div>";
+
+    var av = r.adicoes[true], af = r.adicoes[false];
+    h += '<div class="bloco"><span class="rot">o que bastaria acrescentar</span>';
+    h += '<p class="expl" style="margin-top:0">Conjuntos mínimos de literais que, somados a Γ, decidem a questão — sem tornar as premissas inconsistentes.</p>';
+    if(av.length){
+      h += '<p class="expl" style="margin-bottom:.1rem">para tornar φ <b style="color:var(--verde)">verdadeira</b>:</p><div class="lits">' +
+           av.slice(0,6).map(function(x){ return '<span class="lit">' + x + "</span>"; }).join("") + "</div>";
+    }
+    if(af.length){
+      h += '<p class="expl" style="margin-bottom:.1rem;margin-top:.7rem">para tornar φ <b style="color:var(--rosa)">falsa</b>:</p><div class="lits">' +
+           af.slice(0,6).map(function(x){ return '<span class="lit">' + x + "</span>"; }).join("") + "</div>";
+    }
+    h += "</div>";
+  } else {
+    var linhaT = r.veredito === "verdadeira" ? r.testemunhaV : r.testemunhaF;
+    if(linhaT)
+      h += '<div class="bloco"><span class="rot">uma valoração que satisfaz Γ</span><p class="val">' +
+           valoracao(linhaT, r.vars) + "</p></div>";
+  }
+
+  /* núcleo mínimo e teorema da dedução */
+  if(r.nucleos && r.nucleos.length){
+    var nuc = r.nucleos[0];
+    if(r.prem.length){
+      h += '<div class="bloco"><span class="rot">premissas efetivamente usadas</span>';
+      if(!nuc.length){
+        h += '<p class="val">nenhuma</p><p class="expl">A conclusão vale sozinha: as premissas são todas supérfluas.</p>';
+      } else {
+        h += '<p class="val">{ ' + nuc.map(function(k){ return fmt(r.prem[k]); }).join(", &nbsp;") + " }</p>";
+        var sobra = [];
+        for(var k = 0; k < r.prem.length; k++) if(nuc.indexOf(k) < 0) sobra.push(fmt(r.prem[k]));
+        h += sobra.length
+          ? '<p class="expl">Supérfluas neste argumento: ' + sobra.join(", ") + ".</p>"
+          : '<p class="expl">Todas as premissas participam; nenhuma é dispensável.</p>';
+        if(r.nucleos.length > 1)
+          h += '<p class="expl">Há ' + r.nucleos.length + " recortes mínimos distintos — a conclusão pode ser obtida por caminhos diferentes.</p>";
+      }
+      h += "</div>";
+    }
+
+    var alvo = r.veredito === "verdadeira" ? r.phi : {t:"¬", a:r.phi};
+    h += '<div class="nota"><b>Pelo teorema da dedução</b>, o resultado acima equivale a dizer que a fórmula<br><span class="form">' +
+         cadeia(nuc.map(function(k){ return r.prem[k]; }), alvo) +
+         '</span><br>é uma tautologia — e portanto, por completude, um teorema demonstrável em 𝓛₁ a partir de EA1, EA2 e EA3 por modus ponens.</div>';
+
+    /* busca efetiva de uma derivação em 𝓛₁ */
+    var premL1 = nuc.map(function(k){ return mostrar(paraL1(r.prem[k])); });
+    var alvoL1 = paraL1(alvo);
+    var traduziu = premL1.join(" ") !== nuc.map(function(k){ return mostrar(r.prem[k]); }).join(" ") ||
+                   mostrar(alvoL1) !== mostrar(alvo);
+    var deriv = null;
+    try { deriv = provar(premL1, alvoL1); } catch(e){ deriv = null; }
+
+    h += '<div class="bloco"><span class="rot">uma derivação em 𝓛₁</span>';
+    if(deriv){
+      if(traduziu)
+        h += '<p class="expl" style="margin-top:0">Premissas e conclusão reescritas em { ¬, → }, que é o alfabeto de 𝓛₁.</p>';
+      h += '<div class="tabela" style="margin-top:.6rem"><table><thead><tr><th>#</th><th>fórmula</th><th>justificativa</th></tr></thead><tbody>';
+      deriv.forEach(function(l){
+        h += '<tr><td class="n">' + l.n + '</td><td class="fo">' + l.f + '</td><td class="ju">' + l.just + "</td></tr>";
+      });
+      h += "</tbody></table></div>";
+      h += '<p class="expl">' + deriv.length + " linhas. Cada uma é premissa, instância de esquema de axioma, ou resultado de modus ponens sobre duas linhas anteriores — e a conferência de cada passo não exige entender do que se fala.</p>";
+    } else {
+      h += '<p class="expl" style="margin-top:0">A busca não encontrou derivação dentro do orçamento de tempo. <b style="color:var(--amber)">Isso não significa que não exista</b>: por completude, ela existe necessariamente, já que a fórmula acima é tautologia.</p>' +
+           '<div class="nota azul" style="margin-top:.7rem"><b>É exatamente a assimetria da seção seguinte.</b> Verificar uma derivação pronta é trivial e sempre termina; encontrá-la é busca num espaço infinito de instâncias de axioma. As provas que usam EA3 de forma essencial — dupla negação, contraposição, introdução de conjunção — costumam exigir fórmulas que não aparecem em parte alguma do enunciado, e a busca cega não as alcança.</div>';
+    }
+    h += "</div>";
+  }
+
+  saida.innerHTML = h + "</div>";
+}
+
+/* ================= ligações ================= */
+
+document.getElementById("add").addEventListener("click", function(){ linhaPremissa(""); });
+document.getElementById("zerar").addEventListener("click", function(){ definir([], conc.value); });
+document.getElementById("exemplo").addEventListener("click", function(){
+  definir(["p", "(r → p) → (r → (p → s))"], "r → s");
+});
+document.getElementById("ir").addEventListener("click", rodar);
+conc.addEventListener("keydown", function(e){ if(e.key === "Enter") rodar(); });
+Array.prototype.forEach.call(document.querySelectorAll(".chip"), function(b){
+  b.addEventListener("click", function(){
+    var p = b.getAttribute("data-p");
+    definir(p ? p.split("|") : [], b.getAttribute("data-c"));
+  });
+});
+
+definir(["p", "(r → p) → (r → (p → s))"], "r → s");
+})();
+</script>
+</body>
+</html>
