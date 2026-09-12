@@ -108,7 +108,7 @@
 <section>
   <p class="kicker">Tradutor · direção inversa</p>
   <h2>Do português para os símbolos</h2>
-  <p class="sub">Aceita justaposição e as palavras <b>e</b>, <b>ou</b>, <b>não</b>, <b>que não é</b>, e a forma <b>todo … é …</b>. É deliberadamente estreito: o que não couber na gramática, ele acusa em vez de adivinhar.</p>
+  <p class="sub">Aceita justaposição e as palavras <b>e</b>, <b>ou</b>, <b>não</b>, <b>que não é</b>, e as quatro formas do quadrado das oposições: <b>todo</b>, <b>nenhum</b>, <b>algum</b>, <b>nem todo</b>. É deliberadamente estreito: o que não couber na gramática, ele acusa em vez de adivinhar.</p>
 
   <div class="linha">
     <input type="text" id="ent-pt" value="quadrúpede voador" spellcheck="false" aria-label="frase em português">
@@ -121,6 +121,10 @@
     <button class="chip" data-p="borboleta ou ovelha">borboleta ou ovelha</button>
     <button class="chip" data-p="não-mamífero carnívoro">não-mamífero carnívoro</button>
     <button class="chip" data-p="toda ovelha é mamífero">toda ovelha é mamífero</button>
+    <button class="chip" data-p="nem toda ovelha é um mamífero voador">nem toda ovelha é um mamífero voador</button>
+    <button class="chip" data-p="nenhuma borboleta é mamífero">nenhuma borboleta é mamífero</button>
+    <button class="chip" data-p="algum mamífero é voador">algum mamífero é voador</button>
+    <button class="chip" data-p="alguma ovelha não é voadora">alguma ovelha não é voadora</button>
   </div>
   <div class="saida" id="saida-pt"></div>
 </section>
@@ -406,11 +410,7 @@ function mostrarCopula(alvo, no){
   var vacua = A.length === 0, copOk = fora.length === 0;
   var vale = negado ? !copOk : copOk;
 
-  var frase = negado
-    ? "Nem " + todo + suj + " é " + artP + pre + "."
-    : maiuscula(todo) + suj + " é " + artP + pre + ".";
-
-  var h = '<span class="rot">em português</span><p class="pt">' + frase + "</p>" +
+  var h = '<span class="rot">em português</span><p class="pt">' + maiuscula(fraseDe(no)) + ".</p>" +
           '<p class="forma">' + conjuntos(no) + "</p>";
   if(d0.tis >= 2)
     h += '<div class="alerta"><b>' + d0.tis + " negações empilhadas.</b> Aos pares elas se cancelam, então a frase acima é a leitura efetiva da expressão.</div>";
@@ -450,6 +450,16 @@ function mostrarCopula(alvo, no){
 
 function maiuscula(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 
+/* frase em português para proposições, respeitando a polaridade das negações empilhadas */
+function fraseDe(no){
+  var d = desdobrar(no);
+  if(!d.cop || d.cop.t !== "cop") return pt(no);
+  var n = d.cop, neg = d.tis % 2 === 1;
+  var todo = genero(n.a) === "f" ? "toda " : "todo ";
+  var art  = genero(n.b) === "f" ? "uma "  : "um ";
+  return (neg ? "nem " + todo : todo) + pt(n.a) + " é " + art + pt(n.b);
+}
+
 /* ================= português → símbolos ================= */
 
 function norm(s){ return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); }
@@ -459,10 +469,35 @@ var VAZIAS = ["um","uma","o","a","os","as","de","do","da","ser","seres","classe"
 
 function reverso(txt){
   var s = txt.replace(/[.,;!?]/g," ").replace(/\s+/g," ").trim().toLowerCase();
-  var m = s.match(/^(todos?|todas?)\s+(.+?)\s+(é|e|são|sao)\s+(.+)$/);
-  if(m) return rUniao(m[2]) + " >> " + rUniao(m[4]);
-  if(/^(todos?|todas?)\s/.test(s))
-    throw new Error("para a cópula, a forma esperada é “todo X é Y” — com o verbo ser, não outro verbo");
+  var V = "(?:é|e|são|sao|seja|sejam)";
+  var m;
+
+  /* não é o caso que P  →  ~(P) */
+  m = s.match(/^n[ãa]o (?:é|e) (?:o caso|verdade) que\s+(.+)$/);
+  if(m) return "~(" + reverso(m[1]) + ")";
+
+  /* nem todo X é Y  →  ~(X >> Y)   — a contraditória da universal afirmativa */
+  m = s.match(new RegExp("^nem\\s+(?:todos?|todas?)\\s+(.+?)\\s+" + V + "\\s+(.+)$"));
+  if(m) return "~(" + rUniao(m[1]) + " >> " + rUniao(m[2]) + ")";
+
+  /* todo X é Y  →  X >> Y */
+  m = s.match(new RegExp("^(?:todos?|todas?)\\s+(.+?)\\s+" + V + "\\s+(.+)$"));
+  if(m) return rUniao(m[1]) + " >> " + rUniao(m[2]);
+
+  /* nenhum X é Y  →  X >> ~(Y) */
+  m = s.match(new RegExp("^(?:nenhum|nenhuma|nenhuns|nenhumas)\\s+(.+?)\\s+" + V + "\\s+(.+)$"));
+  if(m) return rUniao(m[1]) + " >> ~(" + rUniao(m[2]) + ")";
+
+  /* algum X não é Y  →  ~(X >> Y)   — tem de vir antes da forma afirmativa */
+  m = s.match(new RegExp("^(?:algum|alguma|alguns|algumas)\\s+(.+?)\\s+n[ãa]o\\s+" + V + "\\s+(.+)$"));
+  if(m) return "~(" + rUniao(m[1]) + " >> " + rUniao(m[2]) + ")";
+
+  /* algum X é Y  →  ~(X >> ~(Y))   — afirmar existência é negar uma universal */
+  m = s.match(new RegExp("^(?:algum|alguma|alguns|algumas)\\s+(.+?)\\s+" + V + "\\s+(.+)$"));
+  if(m) return "~(" + rUniao(m[1]) + " >> ~(" + rUniao(m[2]) + "))";
+
+  if(/^(todos?|todas?|nenhum|nenhuma|nenhuns|nenhumas|algum|alguma|alguns|algumas|nem)\s/.test(s))
+    throw new Error("reconheço “todo X é Y”, “nenhum X é Y”, “algum X é Y”, “algum X não é Y” e “nem todo X é Y” — com o verbo ser");
   return rUniao(s);
 }
 function rUniao(s){ return s.split(/\s+ou\s+/).map(rDif).join(" + "); }
@@ -495,8 +530,7 @@ function mostrarPt(txt){
   try {
     var n = analisar(r);
     h += '<p class="forma">' + conjuntos(n) + "</p>";
-    h += '<p class="resto" style="margin-top:.9rem">De volta ao português: ' +
-         (n.t === "cop" ? (genero(n.a)==="f"?"toda ":"todo ") + pt(n.a) + " é " + pt(n.b) : pt(n)) + ".</p>";
+    h += '<p class="resto" style="margin-top:.9rem">De volta ao português: ' + fraseDe(n) + ".</p>";
   } catch(e){}
   alvo.innerHTML = h;
 }
