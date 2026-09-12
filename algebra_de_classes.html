@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Álgebra de classes — Matemática Discreta · IFTM</title>
+<meta name="description" content="Tradutor entre a notação da álgebra de classes de Boole e o português, com bestiário e exemplos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f; --surface:#0d1119; --surface2:#111725;
+    --rule:#1b2230; --text:#e7eaf0; --muted:#868ea2;
+    --amber:#f5a623; --amber-dim:#8a5f16; --azul:#6fb3d2; --rosa:#d2789a;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif:"IBM Plex Serif", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);
+       font-size:15px;line-height:1.68;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:62rem;margin:0 auto;padding:clamp(2.5rem,8vw,5rem) clamp(1.25rem,5vw,2.5rem) 4rem;}
+  .eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 1.1rem;}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,5.5vw,2.8rem);line-height:1.1;
+     letter-spacing:-.015em;margin:0;}
+  .lead{color:var(--muted);max-width:41rem;margin:1rem 0 0;}
+  section{margin-top:clamp(2.8rem,7vw,4rem);}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.4rem;margin:0 0 .2rem;}
+  .kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 .7rem;}
+  .sub{color:var(--muted);max-width:44rem;margin:0 0 1.3rem;font-size:.9rem;}
+
+  input[type=text]{font-family:var(--mono);font-size:1.05rem;width:100%;padding:.7rem .9rem;
+    background:var(--surface2);color:var(--text);border:1px solid var(--rule);border-radius:8px;}
+  input[type=text]:focus{outline:none;border-color:var(--amber);}
+  .linha{display:flex;gap:.6rem;align-items:stretch;}
+  .linha input{flex:1;}
+  button{font-family:var(--mono);font-size:.85rem;padding:.7rem 1.1rem;background:var(--surface2);
+    color:var(--text);border:1px solid var(--rule);border-radius:8px;cursor:pointer;
+    transition:border-color .16s,color .16s;white-space:nowrap;}
+  button:hover,button:focus-visible{border-color:var(--amber);color:var(--amber);outline:none;}
+  button.primario{border-color:var(--amber-dim);color:var(--amber);}
+  .chips{margin-top:.8rem;display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;}
+  .chips span.rot{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:.2rem;}
+  .chip{font-size:.8rem;padding:.22rem .6rem;border-radius:20px;background:none;}
+
+  .saida{margin-top:1.2rem;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.4rem 1.4rem 1.2rem;}
+  .saida .rot{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.15rem;}
+  .pt{font-family:var(--serif);font-size:1.7rem;line-height:1.25;margin:0 0 .1rem;}
+  .pt.vazio{color:var(--muted);font-style:italic;}
+  .forma{font-size:.95rem;color:var(--azul);margin:.9rem 0 0;}
+  .exemplo{margin-top:1.2rem;padding-top:1.1rem;border-top:1px solid var(--rule);}
+  .bicho{font-family:var(--serif);font-size:1.45rem;color:var(--amber);text-transform:capitalize;}
+  .resto{font-size:.83rem;color:var(--muted);margin:.3rem 0 0;}
+  .veredito{font-family:var(--serif);font-size:1.5rem;margin:0;}
+  .v-sim{color:#7fd28e;} .v-nao{color:var(--rosa);} .v-vac{color:var(--azul);}
+  .alerta{margin-top:1rem;padding:.8rem 1rem;border-left:2px solid var(--azul);background:var(--surface2);
+    font-size:.82rem;color:var(--muted);border-radius:0 8px 8px 0;}
+  .alerta b{color:var(--azul);font-weight:400;}
+  .erro{color:var(--rosa);font-size:.88rem;}
+
+  table{width:100%;border-collapse:collapse;font-size:.84rem;}
+  th,td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--rule);}
+  th{font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:400;}
+  td.let{font-family:var(--serif);font-size:1.05rem;color:var(--amber);width:3rem;}
+  td.cls{color:var(--azul);letter-spacing:.12em;}
+  .tabela{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow:hidden;}
+  .tabela table tr:last-child td{border-bottom:0;}
+  .duas{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));}
+  .nota{margin-top:1rem;padding:.85rem 1rem;border-left:2px solid var(--amber);background:var(--surface);
+    font-size:.83rem;color:var(--muted);border-radius:0 8px 8px 0;}
+  .nota b{color:var(--amber);font-weight:400;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="eyebrow">IFTM · Matemática Discreta</p>
+  <h1>Álgebra de classes</h1>
+  <p class="lead">Uma linguagem minúscula, no espírito das <em>Leis do Pensamento</em> de Boole: conceitos são classes, e operar sobre classes é operar sobre conceitos. Escreva uma expressão e veja o que ela diz — e quem a habita.</p>
+</header>
+
+<section>
+  <p class="kicker">Tradutor</p>
+  <h2>Dos símbolos para o português</h2>
+  <p class="sub">Justaposição é interseção, <b>+</b> é união, <b>−</b> é diferença, <b>~</b> é complemento, <b>&gt;&gt;</b> é a cópula. O til liga mais forte que a justaposição, que liga mais forte que + e −; parênteses resolvem o resto.</p>
+
+  <div class="linha">
+    <input type="text" id="ent-sim" value="QV" spellcheck="false" aria-label="expressão simbólica">
+    <button class="primario" id="btn-sim">traduzir</button>
+  </div>
+  <div class="chips">
+    <span class="rot">experimente</span>
+    <button class="chip" data-e="QV">QV</button>
+    <button class="chip" data-e="MV">MV</button>
+    <button class="chip" data-e="QVF">QVF</button>
+    <button class="chip" data-e="M - Q">M - Q</button>
+    <button class="chip" data-e="~MQ">~MQ</button>
+    <button class="chip" data-e="~(MQ)">~(MQ)</button>
+    <button class="chip" data-e="B + O">B + O</button>
+    <button class="chip" data-e="O &gt;&gt; M">O &gt;&gt; M</button>
+    <button class="chip" data-e="O &gt;&gt; V">O &gt;&gt; V</button>
+    <button class="chip" data-e="BQ &gt;&gt; O">BQ &gt;&gt; O</button>
+  </div>
+  <div class="saida" id="saida-sim"></div>
+</section>
+
+<section>
+  <p class="kicker">Tradutor · direção inversa</p>
+  <h2>Do português para os símbolos</h2>
+  <p class="sub">Aceita justaposição e as palavras <b>e</b>, <b>ou</b>, <b>não</b>, <b>que não é</b>, e a forma <b>todo … é …</b>. É deliberadamente estreito: o que não couber na gramática, ele acusa em vez de adivinhar.</p>
+
+  <div class="linha">
+    <input type="text" id="ent-pt" value="quadrúpede voador" spellcheck="false" aria-label="frase em português">
+    <button class="primario" id="btn-pt">converter</button>
+  </div>
+  <div class="chips">
+    <span class="rot">experimente</span>
+    <button class="chip" data-p="quadrúpede voador">quadrúpede voador</button>
+    <button class="chip" data-p="mamífero que não é quadrúpede">mamífero que não é quadrúpede</button>
+    <button class="chip" data-p="borboleta ou ovelha">borboleta ou ovelha</button>
+    <button class="chip" data-p="não-mamífero carnívoro">não-mamífero carnívoro</button>
+    <button class="chip" data-p="toda ovelha é mamífero">toda ovelha é mamífero</button>
+  </div>
+  <div class="saida" id="saida-pt"></div>
+</section>
+
+<section>
+  <p class="kicker">Referência</p>
+  <h2>As classes e os operadores</h2>
+  <div class="duas">
+    <div class="tabela"><table id="tab-cls"><thead><tr><th>letra</th><th>conceito</th><th>como adjetivo</th></tr></thead><tbody></tbody></table></div>
+    <div class="tabela"><table><thead><tr><th>forma</th><th>lê-se</th></tr></thead><tbody>
+      <tr><td class="let">xy</td><td>x e y ao mesmo tempo — interseção</td></tr>
+      <tr><td class="let">x + y</td><td>x ou y — união</td></tr>
+      <tr><td class="let">x − y</td><td>x que não é y — diferença</td></tr>
+      <tr><td class="let">~x</td><td>o que não é x — complemento</td></tr>
+      <tr><td class="let">x ≫ y</td><td>todo x é y — cópula</td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="nota"><b>A volta nem sempre devolve o mesmo.</b> “Não-mamífero carnívoro” vira <code>~MC</code>, que o tradutor lê de volta como “carnívoro não mamífero”. As duas frases nomeiam a mesma classe: a interseção é comutativa, mas o português tem núcleo e adjunto, e precisa escolher quem é o substantivo. A álgebra não tem essa obrigação — é parte do que ela ganha ao abandonar a língua.</div>
+  <div class="nota"><b>Cuidado com a precedência.</b> <code>~MQ</code> significa (~M)Q, os não-mamíferos que são quadrúpedes — e não ~(MQ), o que não é mamífero quadrúpede. Compare os dois nos exemplos acima: a diferença entre eles é exatamente a lição.</div>
+</section>
+
+<section>
+  <p class="kicker">Modelo</p>
+  <h2>O bestiário</h2>
+  <p class="sub">Toda expressão é avaliada contra esta lista — e só contra ela. O que ela diz sobre o mundo depende de quem está na lista, o que já é meia aula de teoria dos modelos.</p>
+  <div class="tabela"><table id="tab-best"><thead><tr><th>criatura</th><th>classes</th><th>em português</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<footer style="margin:3rem 0 0;padding:1.4rem 0 0;border-top:1px solid #1b2230;
+               font-size:.76rem;line-height:1.6;color:#868ea2;">
+  <style>
+    .voltar-md{color:#868ea2;text-decoration:none;border-bottom:1px solid #1b2230;
+               transition:color .16s,border-color .16s;}
+    .voltar-md:hover,.voltar-md:focus-visible{color:#f5a623;border-color:#f5a623;}
+    .voltar-md .seta{display:inline-block;transition:transform .16s;}
+    .voltar-md:hover .seta{transform:translateX(-3px);}
+  </style>
+  <a class="voltar-md" href="index.html"><span class="seta" aria-hidden="true">←</span> Matemática Discreta</a>
+  · Prof. André Lemos · IFTM Campus Uberlândia Centro
+</footer>
+
+</div>
+<script>
+(function(){
+"use strict";
+
+/* ================= dados ================= */
+
+var CL = {
+  A:{subst:"animal",    gen:"m", adjM:"animal",    adjF:"animal",    rank:2, formas:["animal","animais"]},
+  M:{subst:"mamífero",  gen:"m", adjM:"mamífero",  adjF:"mamífera",  rank:2, formas:["mamifero","mamifera","mamiferos","mamiferas"]},
+  R:{subst:"réptil",    gen:"m", adjM:"réptil",    adjF:"réptil",    rank:2, formas:["reptil","repteis"]},
+  P:{subst:"peixe",     gen:"m", adjM:"peixe",     adjF:"peixe",     rank:2, formas:["peixe","peixes"]},
+  I:{subst:"inseto",    gen:"m", adjM:"inseto",    adjF:"inseto",    rank:2, formas:["inseto","insetos","insecto"]},
+  H:{subst:"humano",    gen:"m", adjM:"humano",    adjF:"humana",    rank:2, formas:["humano","humana","humanos","humanas"]},
+  O:{subst:"ovelha",    gen:"f", adjM:"ovelha",    adjF:"ovelha",    rank:3, formas:["ovelha","ovelhas"]},
+  B:{subst:"borboleta", gen:"f", adjM:"borboleta", adjF:"borboleta", rank:3, formas:["borboleta","borboletas"]},
+  Q:{subst:"quadrúpede",gen:"m", adjM:"quadrúpede",adjF:"quadrúpede",rank:1, formas:["quadrupede","quadrupedes"]},
+  V:{subst:"voador",    gen:"m", adjM:"voador",    adjF:"voadora",   rank:1, formas:["voador","voadora","voadores","voadoras"]},
+  C:{subst:"carnívoro", gen:"m", adjM:"carnívoro", adjF:"carnívora", rank:1, formas:["carnivoro","carnivora","carnivoros","carnivoras"]},
+  D:{subst:"doméstico", gen:"m", adjM:"doméstico", adjF:"doméstica", rank:1, formas:["domestico","domestica","domesticos","domesticas"]},
+  F:{subst:"fabuloso",  gen:"m", adjM:"fabuloso",  adjF:"fabulosa",  rank:1, formas:["fabuloso","fabulosa","fabulosos","fabulosas","mitico","mitica"]}
+};
+
+var BEST = [
+  {n:"ovelha",c:"OMQAD",d:3},   {n:"morcego",c:"MVA",d:3},     {n:"borboleta",c:"BIVA",d:3},
+  {n:"hipogrifo",c:"QVAFC",d:3},{n:"cavalo",c:"MQAD",d:2},     {n:"gato",c:"MQACD",d:2},
+  {n:"leão",c:"MQAC",d:2},      {n:"águia",c:"VAC",d:2},       {n:"tubarão",c:"PAC",d:2},
+  {n:"serpente",c:"RAC",d:2},   {n:"crocodilo",c:"RQAC",d:2},  {n:"humano",c:"HMA",d:2},
+  {n:"baleia",c:"MA",d:2},      {n:"pinguim",c:"AC",d:1},      {n:"abelha",c:"IVA",d:1},
+  {n:"pégaso",c:"QVMAF",d:2},   {n:"grifo",c:"QVAFC",d:2},     {n:"dragão",c:"QVRAFC",d:2},
+  {n:"unicórnio",c:"QMAF",d:2}, {n:"centauro",c:"QHMAF",d:2},  {n:"sereia",c:"HPAF",d:2},
+  {n:"fênix",c:"VAF",d:2},      {n:"quimera",c:"QVMAFC",d:1},  {n:"esfinge",c:"QVHAF",d:1},
+  {n:"minotauro",c:"HMAFC",d:1}
+];
+
+/* inclusões declaradas: usadas só para distinguir vazio necessário de vazio contingente */
+var INC = [["O","M"],["O","Q"],["O","A"],["M","A"],["R","A"],["P","A"],["I","A"],
+           ["B","I"],["B","V"],["B","A"],["H","M"],["Q","A"],["V","A"],["C","A"],["D","A"]];
+function incluso(x,y){ return INC.some(function(p){ return p[0]===x && p[1]===y; }); }
+
+/* ================= análise sintática ================= */
+
+function analisar(txt){
+  var s = txt.replace(/\s+/g,""), i = 0;
+  function fim(){ return i >= s.length; }
+  function espia(){ return s.slice(i, i+2) === ">>" ? ">>" : s[i]; }
+
+  function prop(){
+    var e = soma();
+    if(!fim() && espia() === ">>"){ i += 2; var d = soma(); return {t:"cop", a:e, b:d}; }
+    return e;
+  }
+  function soma(){
+    var e = prod();
+    while(!fim() && (s[i] === "+" || s[i] === "-")){
+      var op = s[i]; i++;
+      var d = prod();
+      e = op === "+" ? {t:"uni", a:e, b:d} : {t:"dif", a:e, b:d};
+    }
+    return e;
+  }
+  function prod(){
+    var f = [fator()];
+    while(!fim() && (CL[s[i]] || s[i] === "~" || s[i] === "(")) f.push(fator());
+    return f.length === 1 ? f[0] : {t:"prod", f:f};
+  }
+  function fator(){
+    if(fim()) throw new Error("expressão incompleta");
+    var c = s[i];
+    if(c === "~"){ i++; return {t:"nao", a:fator()}; }
+    if(c === "("){ i++; var e = soma(); if(s[i] !== ")") throw new Error("falta fechar parêntese"); i++; return e; }
+    if(CL[c]){ i++; return {t:"lit", v:c}; }
+    throw new Error("símbolo desconhecido: " + c);
+  }
+
+  var r = prop();
+  if(!fim()) throw new Error("sobrou “" + s.slice(i) + "”");
+  return r;
+}
+
+/* ================= avaliação ================= */
+
+var TODOS = BEST.map(function(_,k){ return k; });
+function temTodas(b, ls){ return ls.every(function(x){ return b.c.indexOf(x) >= 0; }); }
+
+function avaliar(n){
+  switch(n.t){
+    case "lit":  return TODOS.filter(function(k){ return BEST[k].c.indexOf(n.v) >= 0; });
+    case "nao":  var d = avaliar(n.a); return TODOS.filter(function(k){ return d.indexOf(k) < 0; });
+    case "prod": return n.f.map(avaliar).reduce(function(x,y){ return x.filter(function(k){ return y.indexOf(k) >= 0; }); });
+    case "uni":  var a = avaliar(n.a), b = avaliar(n.b); return TODOS.filter(function(k){ return a.indexOf(k) >= 0 || b.indexOf(k) >= 0; });
+    case "dif":  var a2 = avaliar(n.a), b2 = avaliar(n.b); return a2.filter(function(k){ return b2.indexOf(k) < 0; });
+  }
+  return [];
+}
+
+/* vazio por definição? cobre os casos X−Y e X~Y com inclusão declarada */
+function vazioNecessario(n){
+  if(n.t === "dif" && n.a.t === "lit" && n.b.t === "lit" && incluso(n.a.v, n.b.v))
+    return "todo " + CL[n.a.v].subst + " é " + CL[n.b.v].subst;
+  if(n.t === "prod"){
+    var lits = n.f.filter(function(x){ return x.t === "lit"; }).map(function(x){ return x.v; });
+    var negs = n.f.filter(function(x){ return x.t === "nao" && x.a.t === "lit"; }).map(function(x){ return x.a.v; });
+    for(var i = 0; i < lits.length; i++)
+      for(var j = 0; j < negs.length; j++)
+        if(incluso(lits[i], negs[j])) return "todo " + CL[lits[i]].subst + " é " + CL[negs[j]].subst;
+  }
+  return null;
+}
+
+/* ================= tradução ================= */
+
+function genero(n){
+  if(n.t === "lit") return CL[n.v].gen;
+  if(n.t === "prod"){ var h = cabeca(n.f); return h ? CL[h.v].gen : "m"; }
+  if(n.t === "dif" || n.t === "uni") return genero(n.a);
+  return "m";
+}
+function cabeca(fs){
+  var melhor = null;
+  fs.forEach(function(x){ if(x.t === "lit" && (!melhor || CL[x.v].rank > CL[melhor.v].rank)) melhor = x; });
+  return melhor;
+}
+function adj(v, g){ return g === "f" ? CL[v].adjF : CL[v].adjM; }
+
+function pt(n){
+  switch(n.t){
+    case "lit": return CL[n.v].subst;
+    case "nao": return n.a.t === "lit" ? "não-" + CL[n.a.v].adjM : "o que não é " + pt(n.a);
+    case "uni": return pt(n.a) + " ou " + pt(n.b);
+    case "dif": return n.a.t === "dif"
+      ? pt(n.a) + " nem " + ptEnv(n.b)
+      : pt(n.a) + " que não é " + ptEnv(n.b);
+    case "prod": return produto(n.f);
+  }
+  return "?";
+}
+/* o português não tem precedência: onde a expressão tinha parêntese, a frase também precisa */
+function ptEnv(n){ return (n.t === "uni" || n.t === "dif") ? "(" + pt(n) + ")" : pt(n); }
+function produto(fs){
+  var h = cabeca(fs);
+  if(!h) return fs.map(pt).join(" e ");
+  var complexo = fs.some(function(x){ return x.t !== "lit" && !(x.t === "nao" && x.a.t === "lit"); });
+  if(complexo) return fs.map(ptEnv).join(" e ");
+  var g = CL[h.v].gen, partes = [];
+  fs.forEach(function(x){
+    if(x === h) return;
+    if(x.t === "lit") partes.push(adj(x.v, g));
+    else partes.push("não " + adj(x.a.v, g));
+  });
+  return CL[h.v].subst + (partes.length ? " " + partes.join(" ") : "");
+}
+
+function conjuntos(n){
+  switch(n.t){
+    case "lit": return n.v;
+    case "nao": return "∁" + env(n.a);
+    case "prod": return n.f.map(env).join(" ∩ ");
+    case "uni": return env(n.a) + " ∪ " + env(n.b);
+    case "dif": return env(n.a) + " ∖ " + env(n.b);
+    case "cop": return conjuntos(n.a) + " ⊆ " + conjuntos(n.b);
+  }
+  return "?";
+}
+function env(n){ return (n.t === "lit" || n.t === "nao") ? conjuntos(n) : "(" + conjuntos(n) + ")"; }
+
+/* ================= saída ================= */
+
+function nomear(ks){ return ks.map(function(k){ return BEST[k]; })
+  .sort(function(a,b){ return b.d - a.d || a.n.localeCompare(b.n,"pt"); }); }
+
+function mostrarSimbolico(txt){
+  var alvo = document.getElementById("saida-sim"), n;
+  try { n = analisar(txt); }
+  catch(e){ alvo.innerHTML = '<p class="erro">Não consegui ler: ' + e.message + "</p>"; return; }
+
+  if(n.t === "cop"){ mostrarCopula(alvo, n); return; }
+
+  var ks = avaliar(n), bichos = nomear(ks);
+  var art = genero(n) === "f" ? "uma " : "um ";
+  var h = '<span class="rot">em português</span><p class="pt">' + maiuscula(pt(n)) + "</p>" +
+          '<p class="forma">' + conjuntos(n) + "</p>";
+
+  h += '<div class="exemplo"><span class="rot">exemplo</span>';
+  if(bichos.length){
+    h += '<span class="bicho">' + bichos[0].n + "</span>";
+    if(bichos.length > 1)
+      h += '<p class="resto">Também: ' + bichos.slice(1).map(function(b){ return b.n; }).join(", ") + ".</p>";
+    else h += '<p class="resto">Único habitante desta classe no bestiário.</p>';
+  } else {
+    var nec = vazioNecessario(n);
+    h += '<span class="bicho" style="color:var(--muted)">classe vazia</span>';
+    h += nec
+      ? '<p class="resto">E não poderia ser diferente: ' + nec + ". A classe é vazia por definição, não por acaso do bestiário.</p>"
+      : '<p class="resto">Nenhuma criatura do bestiário pertence a ' + art + pt(n) + ". Nada impede que exista — apenas não há aqui.</p>";
+  }
+  h += "</div>";
+  alvo.innerHTML = h;
+}
+
+function mostrarCopula(alvo, n){
+  var A = avaliar(n.a), B = avaliar(n.b);
+  var fora = A.filter(function(k){ return B.indexOf(k) < 0; });
+  var suj = pt(n.a), pre = pt(n.b);
+  var todo = genero(n.a) === "f" ? "Toda " : "Todo ";
+  var artP = genero(n.b) === "f" ? "uma " : "um ";
+
+  var h = '<span class="rot">em português</span><p class="pt">' + todo + suj + " é " + artP + pre + ".</p>" +
+          '<p class="forma">' + conjuntos(n) + "</p>" +
+          '<div class="exemplo"><span class="rot">valor de verdade</span>';
+
+  if(A.length === 0){
+    h += '<p class="veredito v-vac">verdadeiro por vacuidade</p>' +
+         '<p class="resto">Não há nenhum ' + suj + " no bestiário. Sem sujeito, não há como a afirmação falhar.</p>" +
+         '<div class="alerta"><b>Este é o ponto que derruba nove silogismos.</b> Na leitura de Boole, uma afirmação universal sobre uma classe vazia é verdadeira. É por isso que “todo S é P” deixa de garantir que exista algum S — e Darapti, Felapton, Bramantip e Fesapo, junto com os cinco subalternos, perdem a validade.</div>';
+  } else if(fora.length === 0){
+    h += '<p class="veredito v-sim">verdadeiro</p>' +
+         '<p class="resto">Os ' + A.length + " habitantes de " + suj + " estão todos em " + pre +
+         ": " + nomear(A).map(function(b){ return b.n; }).join(", ") + ".</p>";
+    if(n.a.t === "lit" && n.b.t === "lit" && incluso(n.a.v, n.b.v))
+      h += '<div class="alerta"><b>Verdadeiro por definição</b>, e não só neste bestiário: a inclusão faz parte do próprio significado dos conceitos.</div>';
+  } else {
+    h += '<p class="veredito v-nao">falso</p>' +
+         '<p class="resto">Contraexemplo: ' + nomear(fora).map(function(b){ return b.n; }).join(", ") +
+         " — é " + suj + " e não é " + pre + ".</p>";
+  }
+  alvo.innerHTML = h + "</div>";
+}
+
+function maiuscula(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+/* ================= português → símbolos ================= */
+
+function norm(s){ return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); }
+var FORMAS = {};
+Object.keys(CL).forEach(function(k){ CL[k].formas.forEach(function(f){ FORMAS[f] = k; }); });
+var VAZIAS = ["um","uma","o","a","os","as","de","do","da","ser","seres","classe","the"];
+
+function reverso(txt){
+  var s = txt.replace(/[.,;!?]/g," ").replace(/\s+/g," ").trim().toLowerCase();
+  var m = s.match(/^(todos?|todas?)\s+(.+?)\s+(é|e|são|sao)\s+(.+)$/);
+  if(m) return rUniao(m[2]) + " >> " + rUniao(m[4]);
+  if(/^(todos?|todas?)\s/.test(s))
+    throw new Error("para a cópula, a forma esperada é “todo X é Y” — com o verbo ser, não outro verbo");
+  return rUniao(s);
+}
+function rUniao(s){ return s.split(/\s+ou\s+/).map(rDif).join(" + "); }
+function rDif(s){
+  var p = s.split(/\s+(?:que|mas)\s+n[ãa]o\s+(?:é|e|são|sao)\s+/);
+  return p.map(rProd).join(" - ");
+}
+function rProd(s){
+  var out = [], neg = false;
+  s.split(/\s+/).forEach(function(w){
+    if(!w) return;
+    if(/^n[ãa]o[-–]/.test(w)){ neg = true; w = w.replace(/^n[ãa]o[-–]/,""); }
+    else if(/^n[ãa]o$/.test(w)){ neg = true; return; }
+    var b = norm(w);
+    if(b === "e" || VAZIAS.indexOf(b) >= 0){ return; }
+    var L = FORMAS[b];
+    if(!L) throw new Error("não conheço a palavra “" + w + "”");
+    out.push((neg ? "~" : "") + L);
+    neg = false;
+  });
+  if(!out.length) throw new Error("não encontrei nenhuma classe");
+  return out.join("");
+}
+
+function mostrarPt(txt){
+  var alvo = document.getElementById("saida-pt"), r;
+  try { r = reverso(txt); }
+  catch(e){ alvo.innerHTML = '<p class="erro">' + e.message + ". As palavras reconhecidas estão na tabela de classes, logo abaixo.</p>"; return; }
+  var h = '<span class="rot">em símbolos</span><p class="pt" style="color:var(--amber)">' + r + "</p>";
+  try {
+    var n = analisar(r);
+    h += '<p class="forma">' + conjuntos(n) + "</p>";
+    h += '<p class="resto" style="margin-top:.9rem">De volta ao português: ' +
+         (n.t === "cop" ? (genero(n.a)==="f"?"toda ":"todo ") + pt(n.a) + " é " + pt(n.b) : pt(n)) + ".</p>";
+  } catch(e){}
+  alvo.innerHTML = h;
+}
+
+/* ================= tabelas ================= */
+
+(function(){
+  var tb = document.querySelector("#tab-cls tbody"), h = "";
+  Object.keys(CL).forEach(function(k){
+    h += '<tr><td class="let">' + k + "</td><td>" + CL[k].subst + "</td><td>" +
+         CL[k].adjM + (CL[k].adjF !== CL[k].adjM ? " / " + CL[k].adjF : "") + "</td></tr>";
+  });
+  tb.innerHTML = h;
+
+  var tb2 = document.querySelector("#tab-best tbody"), h2 = "";
+  BEST.slice().sort(function(a,b){ return a.n.localeCompare(b.n,"pt"); }).forEach(function(b){
+    h2 += "<tr><td>" + b.n + '</td><td class="cls">' + b.c + "</td><td>" +
+          b.c.split("").map(function(x){ return CL[x].subst; }).join(", ") + "</td></tr>";
+  });
+  tb2.innerHTML = h2;
+})();
+
+/* ================= ligações ================= */
+
+var eS = document.getElementById("ent-sim"), eP = document.getElementById("ent-pt");
+document.getElementById("btn-sim").addEventListener("click", function(){ mostrarSimbolico(eS.value); });
+eS.addEventListener("keydown", function(e){ if(e.key === "Enter") mostrarSimbolico(eS.value); });
+document.getElementById("btn-pt").addEventListener("click", function(){ mostrarPt(eP.value); });
+eP.addEventListener("keydown", function(e){ if(e.key === "Enter") mostrarPt(eP.value); });
+
+Array.prototype.forEach.call(document.querySelectorAll(".chip[data-e]"), function(b){
+  b.addEventListener("click", function(){ eS.value = b.getAttribute("data-e"); mostrarSimbolico(eS.value); });
+});
+Array.prototype.forEach.call(document.querySelectorAll(".chip[data-p]"), function(b){
+  b.addEventListener("click", function(){ eP.value = b.getAttribute("data-p"); mostrarPt(eP.value); });
+});
+
+mostrarSimbolico("QV");
+mostrarPt("quadrúpede voador");
+
+window.__t = { analisar:analisar, avaliar:avaliar, pt:pt, conjuntos:conjuntos, reverso:reverso, BEST:BEST, nomear:nomear, genero:genero };
+})();
+</script>
+</body>
+</html>
