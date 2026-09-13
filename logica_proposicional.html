@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="/matematica-discreta/favicon-32.png" type="32x32">
 <title>Lógica proposicional — Matemática Discreta · IFTM</title>
 <meta name="description" content="Cálculo proposicional: caracterização formal, o sistema axiomático de Łukasiewicz e uma ferramenta de classificação semântica de fórmulas.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -222,6 +221,13 @@
       <button class="chip" data-p="p|p → q|q → r|r → s" data-c="s">cadeia longa</button>
     </div>
     <div class="chips">
+      <span class="rot" style="margin:0 .3rem 0 0;display:inline">desproporção</span>
+      <button class="chip" data-p="p → (p → q)" data-c="p → q">contração · 10 linhas</button>
+      <button class="chip" data-p="q → (q → p)" data-c="q → p">contração (outra letra)</button>
+      <button class="chip" data-p="(p → q) → (q → p)" data-c="q → p">o recorde · 15 linhas</button>
+      <button class="chip" data-p="¬p" data-c="q → q">7 linhas para q → q</button>
+    </div>
+    <div class="chips">
       <span class="rot" style="margin:0 .3rem 0 0;display:inline">a busca falha</span>
       <button class="chip" data-p="p → q|¬q" data-c="¬p">modus tollens</button>
       <button class="chip" data-p="¬¬p" data-c="p">dupla negação</button>
@@ -230,6 +236,7 @@
     </div>
   </div>
 
+  <div class="nota" style="margin-top:.9rem"><b>Por que a contração custa dez linhas.</b> A premissa <span class="form">p → (p → q)</span> menciona p duas vezes, e a leitura intuitiva é “use p duas vezes e chegue a q”. Mas em sistema de Hilbert não há suposição a ser usada nenhuma vez, quanto mais duas: a contração é propriedade <em>derivada</em>, não regra primitiva, e quem faz todo o trabalho é EA2.<br><br>Repare no caminho: a prova sobe até <span class="form">p → (p → (p → q))</span>, fórmula mais longa que tudo o que aparece no enunciado, passa por <span class="form">p → p</span> — que sozinho já custa cinco linhas — e só então desce até a conclusão de três símbolos. <b style="color:var(--amber)">A demonstração fica maior que o teorema antes de ficar menor.</b> É a mesma falta da propriedade da subfórmula que faz a busca falhar noutros casos: aqui ela não impede a prova, apenas a encarece.</div>
   <div class="nota azul" style="margin-top:.9rem"><b>A última fileira é proposital.</b> Os quatro argumentos são válidos, e a ferramenta confirma isso — mas a busca não acha a derivação. Não é falha de implementação: todos eles exigem fórmulas que não aparecem no enunciado, e a seção sobre complexidade, mais abaixo, explica por quê. Compare com “contraposição encadeada”, que usa EA3 duas vezes e sai em nove linhas: o que separa os dois casos não é a dificuldade aparente.</div>
 
   <div class="saida" id="saida"></div>
@@ -841,6 +848,8 @@ function rodar(){
       });
       h += "</tbody></table></div>";
       h += '<p class="expl">' + deriv.length + " linhas. Cada uma é premissa, instância de esquema de axioma, ou resultado de modus ponens sobre duas linhas anteriores — e a conferência de cada passo não exige entender do que se fala.</p>";
+      if(deriv.length >= 8)
+        h += '<p class="expl">Compare o tamanho da derivação com o do enunciado. Não há garantia de que esta seja a <em>mais curta</em>: achar a prova mínima é problema ainda mais duro que achar uma prova qualquer.</p>';
     } else {
       h += '<p class="expl" style="margin-top:0">A busca não encontrou derivação dentro do orçamento de tempo. <b style="color:var(--amber)">Isso não significa que não exista</b>: por completude, ela existe necessariamente, já que a fórmula acima é tautologia.</p>' +
            '<div class="nota azul" style="margin-top:.7rem"><b>É exatamente a assimetria da seção seguinte.</b> Verificar uma derivação pronta é trivial e sempre termina; encontrá-la é busca num espaço infinito de instâncias de axioma. As provas que usam EA3 de forma essencial — dupla negação, contraposição, introdução de conjunção — costumam exigir fórmulas que não aparecem em parte alguma do enunciado, e a busca cega não as alcança.</div>';
