@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A linguagem da aritmética — Matemática Discreta · IFTM</title>
+<meta name="description" content="Lógica de predicados, parte 2: uma linguagem de primeira ordem para os números naturais, os axiomas de Peano, um sistema de regras de inferência e derivações comentadas, passo a passo.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%2307090f'/%3E%3Cpath d='M16 46 L32 32 L48 18' fill='none' stroke='%238a5f16' stroke-width='3.5' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='46' r='6' fill='%23f5a623'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23f5a623'/%3E%3Ccircle cx='48' cy='18' r='6' fill='%23f5a623'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f; --surface:#0d1119; --surface2:#111725;
+    --rule:#1b2230; --text:#e7eaf0; --muted:#868ea2; --dim:#5f6779;
+    --amber:#f5a623; --amber-dim:#8a5f16; --azul:#6fb3d2; --rosa:#d2789a; --verde:#7fd28e;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif:"IBM Plex Serif", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);
+       font-size:15px;line-height:1.68;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:62rem;margin:0 auto;padding:clamp(2.5rem,8vw,5rem) clamp(1rem,5vw,2.5rem) 4rem;}
+  .eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 1.1rem;}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,5.5vw,2.8rem);line-height:1.1;
+     letter-spacing:-.015em;margin:0;}
+  .lead{color:var(--muted);max-width:43rem;margin:1rem 0 0;}
+  section{margin-top:clamp(2.8rem,7vw,4.2rem);}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.45rem;line-height:1.25;margin:0 0 .25rem;}
+  .kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 .7rem;}
+  .sub{color:var(--muted);max-width:46rem;margin:0 0 1.3rem;font-size:.9rem;}
+  a{color:var(--azul);}
+  a:hover{color:var(--amber);}
+
+  .cartao{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.3rem 1.4rem;}
+  .duas{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(17.5rem,1fr));}
+  .tres{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));}
+  .cartao h3{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:0 0 .55rem;}
+  .cartao p{margin:.45rem 0 0;color:var(--muted);font-size:.86rem;}
+  .cartao p:first-of-type{margin-top:0;}
+  .cartao h3 + p{margin-top:0;}
+  .form{font-family:var(--serif);font-size:1.02rem;color:var(--azul);white-space:nowrap;}
+  .gr{color:var(--amber);}
+  b.t{color:var(--text);font-weight:500;}
+
+  ul.limpa{list-style:none;margin:.2rem 0 0;padding:0;}
+  ul.limpa li{padding:.5rem 0;border-top:1px solid var(--rule);font-size:.84rem;color:var(--muted);}
+  ul.limpa li:first-child{border-top:0;padding-top:.1rem;}
+  ul.limpa li .sim{display:inline-block;min-width:4.4rem;}
+  ul.limpa li b{color:var(--text);font-weight:500;}
+  ol.rec{margin:.3rem 0 0;padding-left:1.25rem;color:var(--muted);font-size:.85rem;}
+  ol.rec li{margin:.3rem 0;}
+  ol.rec b{color:var(--text);font-weight:500;}
+
+  .nota{margin-top:1rem;padding:.85rem 1rem;border-left:2px solid var(--amber);background:var(--surface);
+        font-size:.83rem;color:var(--muted);border-radius:0 8px 8px 0;}
+  .nota b{color:var(--amber);font-weight:500;}
+  .nota.azul{border-left-color:var(--azul);} .nota.azul b{color:var(--azul);}
+
+  table{width:100%;border-collapse:collapse;font-size:.84rem;}
+  th,td{text-align:left;padding:.5rem .65rem;border-bottom:1px solid var(--rule);vertical-align:top;}
+  th{font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:400;}
+  tr:last-child td{border-bottom:0;}
+  .tabela{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow-x:auto;}
+  td.fo{font-family:var(--serif);font-size:.98rem;color:var(--azul);white-space:nowrap;}
+  td.le{color:var(--muted);}
+  td.ab{color:var(--amber);white-space:nowrap;}
+
+  input[type=text], input[type=number]{font-family:var(--mono);font-size:1rem;padding:.6rem .8rem;
+    background:var(--surface2);color:var(--text);border:1px solid var(--rule);border-radius:8px;}
+  input[type=text]{width:100%;}
+  input:focus{outline:none;border-color:var(--amber);}
+  button{font-family:var(--mono);font-size:.84rem;padding:.55rem .95rem;background:var(--surface2);
+    color:var(--text);border:1px solid var(--rule);border-radius:8px;cursor:pointer;
+    transition:border-color .16s,color .16s;white-space:nowrap;}
+  button:hover,button:focus-visible{border-color:var(--amber);color:var(--amber);outline:none;}
+  button.primario{border-color:var(--amber-dim);color:var(--amber);}
+  button[disabled]{opacity:.35;cursor:default;border-color:var(--rule);color:var(--text);}
+  .linha{display:flex;gap:.5rem;align-items:center;}
+  .linha input{flex:1;min-width:0;}
+  .chips{display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;margin-top:.8rem;}
+  .chips .rot{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-right:.3rem;}
+  .chip{font-size:.8rem;padding:.2rem .65rem;border-radius:20px;background:none;}
+  .chip.sel{border-color:var(--amber);color:var(--amber);}
+  .rot{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.35rem;}
+  .erro{color:var(--rosa);font-size:.88rem;}
+
+  .proxima{display:block;margin-top:clamp(2.8rem,7vw,4rem);text-decoration:none;background:var(--surface);
+    border:1px solid var(--amber-dim);border-radius:12px;padding:1.4rem 1.5rem;color:var(--text);
+    transition:border-color .16s;}
+  .proxima:hover,.proxima:focus-visible{border-color:var(--amber);color:var(--text);outline:none;}
+  .proxima .rot{color:var(--amber);}
+  .proxima strong{display:block;font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:.1rem 0 .35rem;}
+  .proxima span.d{color:var(--muted);font-size:.86rem;}
+  .proxima .seta{float:right;color:var(--amber);font-size:1.4rem;line-height:1;transition:transform .16s;}
+  .proxima:hover .seta{transform:translateX(4px);}
+
+  footer{margin:3rem 0 0;padding:1.4rem 0 0;border-top:1px solid var(--rule);font-size:.76rem;line-height:1.8;color:var(--muted);}
+  footer a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--rule);transition:color .16s,border-color .16s;}
+  footer a:hover,footer a:focus-visible{color:var(--amber);border-color:var(--amber);outline:none;}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important;}}
+
+  .quatro{display:grid;gap:.8rem;grid-template-columns:repeat(auto-fit,minmax(11.5rem,1fr));}
+  .simb{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1rem 1.1rem;}
+  .simb .s{font-family:var(--serif);font-size:1.9rem;color:var(--amber);line-height:1.1;display:block;margin-bottom:.35rem;}
+  .simb .tipo{font-size:.64rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:block;}
+  .simb p{margin:.4rem 0 0;font-size:.82rem;color:var(--muted);}
+
+  pre.codigo{font-family:var(--mono);font-size:.84rem;line-height:1.7;background:var(--surface2);color:var(--text);
+             border:1px solid var(--rule);border-radius:8px;padding:.85rem 1rem;margin:.7rem 0 0;overflow-x:auto;}
+  pre.codigo .c{color:var(--dim);}
+  td.ax{font-family:var(--serif);color:var(--amber);white-space:nowrap;width:3.2rem;}
+
+  /* avaliador */
+  .paineis{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));margin-top:1.1rem;}
+  .painel{background:var(--surface2);border:1px solid var(--rule);border-radius:10px;padding:1rem 1.1rem;min-width:0;}
+  .atr{display:flex;flex-wrap:wrap;gap:.6rem;margin:.1rem 0 .7rem;align-items:center;font-family:var(--serif);font-size:1.05rem;color:var(--rosa);}
+  .atr input{width:4.2rem;padding:.3rem .5rem;font-size:.95rem;}
+  .grande{font-family:var(--serif);font-size:2.2rem;line-height:1.15;color:var(--text);margin:.1rem 0 .6rem;}
+  .grande small{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:.6rem;}
+  .subt td{padding:.3rem .4rem;font-size:.82rem;}
+  .subt td:first-child{font-family:var(--serif);color:var(--azul);font-size:.95rem;overflow-wrap:anywhere;}
+  .subt td:last-child{text-align:right;color:var(--text);white-space:nowrap;}
+  ol.passos{list-style:none;margin:0;padding:0;counter-reset:p;}
+  ol.passos li{display:grid;grid-template-columns:2.6rem 1fr;gap:.6rem;align-items:baseline;padding:.3rem 0;border-top:1px solid var(--rule);}
+  ol.passos li:first-child{border-top:0;}
+  ol.passos .tag{font-size:.7rem;color:var(--amber);letter-spacing:.06em;}
+  ol.passos .tag.ini{color:var(--dim);}
+  ol.passos .t{font-family:var(--serif);color:var(--azul);font-size:.98rem;overflow-wrap:anywhere;}
+  .fim-rees{margin:.8rem 0 0;font-size:.84rem;color:var(--muted);}
+  .fim-rees b{font-weight:500;}
+  .fim-rees .ok{color:var(--verde);} .fim-rees .mal{color:var(--rosa);}
+
+  /* regras */
+  .regras td.esq{font-family:var(--serif);color:var(--azul);white-space:nowrap;font-size:.98rem;}
+  .regras td.nome{white-space:nowrap;}
+  .regras td.nome b{color:var(--amber);font-weight:500;display:block;}
+  .regras td.nome span{color:var(--muted);font-size:.75rem;}
+  .regras td.cond{color:var(--muted);font-size:.8rem;min-width:13rem;}
+  .lnk{font-size:.74rem;padding:.12rem .5rem;border-radius:20px;background:none;margin:.15rem .2rem 0 0;}
+  .lnk.fal{border-color:#4a2433;}
+  .lnk.fal:hover,.lnk.fal:focus-visible{border-color:var(--rosa);color:var(--rosa);}
+  .grade-regras{display:grid;grid-template-columns:repeat(auto-fit,minmax(19rem,1fr));gap:0 1.5rem;margin-top:.8rem;}
+  .regra{display:grid;grid-template-columns:9.5rem 1fr;gap:.6rem;align-items:baseline;padding:.55rem 0;border-top:1px solid var(--rule);}
+  .regra .nome b{color:var(--amber);font-weight:500;display:block;font-size:.84rem;}
+  .regra .nome span{color:var(--muted);font-size:.74rem;}
+  .regra .esq{font-family:var(--serif);color:var(--azul);font-size:1rem;}
+
+  /* derivações */
+  .grupo-der{margin-top:.3rem;}
+  .grupo-der + .grupo-der{margin-top:.2rem;}
+  .chip.fal{border-color:#4a2433;}
+  .chip.fal.sel{border-color:var(--rosa);color:var(--rosa);}
+  .der{margin-top:1.1rem;}
+  .der:focus{outline:none;}
+  .der:focus-visible{border-color:var(--amber-dim);}
+  .der h3{font-size:1.25rem;margin:0;}
+  .der .enun{font-family:var(--serif);font-size:1.12rem;color:var(--azul);margin:.35rem 0 0;overflow-wrap:anywhere;}
+  .der .intro{margin:.7rem 0 0;max-width:48rem;}
+  .selo{font-size:.78rem;margin:.8rem 0 1rem;padding:.45rem .7rem;border-radius:8px;display:inline-block;}
+  .selo.ok{color:var(--verde);background:rgba(127,210,142,.07);border:1px solid rgba(127,210,142,.25);}
+  .selo.mal{color:var(--rosa);background:rgba(210,120,154,.07);border:1px solid rgba(210,120,154,.28);}
+  .der table td{padding-top:0;padding-bottom:0;vertical-align:middle;}
+  .der td.n{color:var(--muted);width:2.4rem;padding-top:.45rem;padding-bottom:.45rem;}
+  .der td.fo{padding-left:0;}
+  .der .cx{padding:.45rem .6rem .45rem calc(var(--d) * 16px + .6rem);
+           background-image:repeating-linear-gradient(to right, var(--azul) 0 2px, transparent 2px 16px);
+           background-size:calc(var(--d) * 16px) 100%;background-repeat:no-repeat;background-position:.6rem 0;}
+  .der .hip{border-bottom:1px solid var(--azul);padding-bottom:1px;}
+  .der td.ju{color:var(--muted);font-size:.8rem;white-space:nowrap;padding-top:.45rem;padding-bottom:.45rem;}
+  .der tr{cursor:pointer;transition:background-color .15s;}
+  .der tr.oculta{display:none;}
+  .der tr.citada{background:rgba(111,179,210,.08);}
+  .der tr.atual{background:rgba(245,166,35,.09);}
+  .der tr.atual td.n{color:var(--amber);}
+  .der tr.erro td.fo, .der tr.erro td.ju{color:var(--rosa);}
+  .der tr.erro td.ju::after{content:"  ✗";}
+  .ctrl{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:1rem;}
+  .ctrl .pos{font-size:.76rem;color:var(--muted);margin-left:.3rem;}
+  .comentario{margin-top:1rem;padding:1rem 1.1rem;background:var(--surface2);border:1px solid var(--rule);border-radius:10px;
+              font-size:.86rem;color:var(--muted);min-height:4.2rem;}
+  .comentario .cab{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);display:block;margin-bottom:.35rem;}
+  .comentario.erro{border-color:rgba(210,120,154,.4);}
+  .comentario.erro .cab{color:var(--rosa);}
+  .comentario .maq{display:block;margin-top:.6rem;padding-top:.55rem;border-top:1px solid var(--rule);color:var(--rosa);font-size:.8rem;}
+  .moral{margin-top:1rem;}
+  .moral[hidden]{display:none;}
+
+  @media (max-width: 40rem){
+    table.empilha, table.empilha tbody, table.empilha tr, table.empilha td{display:block;width:auto;}
+    table.empilha thead{display:none;}
+    table.empilha tr{padding:.55rem .25rem;border-bottom:1px solid var(--rule);}
+    table.empilha tr:last-child{border-bottom:0;}
+    table.empilha td{border:0;padding:.12rem .55rem;}
+    table.empilha td:first-child{display:inline-block;}
+    table.empilha td:nth-child(2){display:inline-block;white-space:normal;}
+    table.empilha td.ax{width:auto;margin-right:.4rem;}
+    table.empilha td.cond{min-width:0;}
+    .regras td.nome{white-space:normal;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">IFTM · Matemática Discreta · Lógica de predicados, 2 de 2</p>
+  <h1>A linguagem da aritmética</h1>
+  <p class="lead">Uma linguagem de primeira ordem feita sob medida para os números naturais: seus parâmetros, os axiomas de Peano e um sistema de regras de inferência — com derivações comentadas, passo a passo, algumas certas e algumas erradas de propósito.</p>
+</header>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Assinatura</p>
+  <h2>Os parâmetros da aritmética</h2>
+  <p class="sub">Dos símbolos lógicos da <a href="logica_predicados.html">página anterior</a>, usam-se todos, inclusive a igualdade. Dos parâmetros, só estes quatro — e nenhum símbolo predicativo: a única relação é a igualdade.</p>
+
+  <div class="quatro">
+    <div class="simb"><span class="s">∀</span><span class="tipo">quantificador</span><p>percorre os números naturais</p></div>
+    <div class="simb"><span class="s">0</span><span class="tipo">constante</span><p>o zero — o único número com nome próprio</p></div>
+    <div class="simb"><span class="s">s</span><span class="tipo">função unária</span><p>o sucessor: s(x) é x + 1</p></div>
+    <div class="simb"><span class="s">+ ·</span><span class="tipo">funções binárias</span><p>a soma e o produto</p></div>
+  </div>
+
+  <div class="duas" style="margin-top:1rem">
+    <div class="cartao">
+      <h3>Não há algarismos</h3>
+      <p>A linguagem não tem os símbolos 1, 2, 3. Cada número se nomeia pela composição: 1 é <span class="form">s(0)</span>, 2 é <span class="form">s(s(0))</span>, e o numeral de n é s aplicado n vezes a 0.</p>
+      <p>O dois não tem nome próprio; tem uma descrição — o sucessor do sucessor do zero. Nesta linguagem, só o zero é um símbolo, no sentido da página anterior; todos os outros números são nomeados por termos compostos.</p>
+    </div>
+    <div class="cartao">
+      <h3>O modelo que se tem em mente</h3>
+      <p>A estrutura padrão chama-se <span class="form">ℕ</span>: o universo são os números naturais, 0 é o zero, s é somar um, + e · são a soma e o produto de sempre.</p>
+      <p>Convenção de escrita: <span class="form">+</span> e <span class="form">·</span> vão entre os argumentos, e não na forma <span class="form">+(x, y)</span>; o produto tem precedência sobre a soma, de modo que <span class="form">x · y + x</span> abrevia <span class="form">(x · y) + x</span>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Axiomas</p>
+  <h2>Os axiomas de Peano</h2>
+  <p class="sub">Seis axiomas e um esquema. Os dois primeiros falam do sucessor; os quatro seguintes definem a soma e o produto; o esquema de indução amarra tudo.</p>
+
+  <div class="tabela"><table class="empilha">
+    <thead><tr><th></th><th>axioma</th><th>lê-se</th></tr></thead>
+    <tbody>
+      <tr><td class="ax">A1</td><td class="fo">∀x ¬(s(x) = 0)</td><td class="le">zero não é sucessor de nenhum número</td></tr>
+      <tr><td class="ax">A2</td><td class="fo">∀x ∀y (s(x) = s(y) → x = y)</td><td class="le">números com o mesmo sucessor são iguais</td></tr>
+      <tr><td class="ax">A3</td><td class="fo">∀x (x + 0 = x)</td><td class="le">somar zero não muda nada</td></tr>
+      <tr><td class="ax">A4</td><td class="fo">∀x ∀y (x + s(y) = s(x + y))</td><td class="le">somar o sucessor de y é tomar o sucessor da soma com y</td></tr>
+      <tr><td class="ax">A5</td><td class="fo">∀x (x · 0 = 0)</td><td class="le">multiplicar por zero dá zero</td></tr>
+      <tr><td class="ax">A6</td><td class="fo">∀x ∀y (x · s(y) = x · y + x)</td><td class="le">multiplicar pelo sucessor de y é multiplicar por y e somar mais um x</td></tr>
+      <tr><td class="ax">Ind</td><td class="fo">(φ(0) ∧ ∀x (φ(x) → φ(s(x)))) → ∀x φ(x)</td><td class="le">se vale para 0, e passa de cada número ao seguinte, vale para todos</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="duas" style="margin-top:1rem">
+    <div class="cartao">
+      <h3>A3 a A6 são um programa</h3>
+      <p>Lidos da esquerda para a direita, os quatro axiomas da soma e do produto são uma definição recursiva — o mesmo desenho de uma função que desce até o caso base:</p>
+<pre class="codigo">soma(x, 0)    = x                    <span class="c">-- A3</span>
+soma(x, s(y)) = s(soma(x, y))        <span class="c">-- A4</span>
+prod(x, 0)    = 0                    <span class="c">-- A5</span>
+prod(x, s(y)) = soma(prod(x, y), x)  <span class="c">-- A6</span></pre>
+      <p style="margin-top:.7rem">A recursão é sempre no <b class="t">segundo</b> argumento. Essa assimetria vai pesar: <span class="form">x + 0 = x</span> é axioma, e <span class="form">0 + x = x</span> não é.</p>
+    </div>
+    <div class="cartao">
+      <h3>A indução é um esquema</h3>
+      <p>Em segunda ordem, a indução seria um único axioma, quantificando sobre todas as propriedades de números. Em primeira ordem só se quantifica sobre números — não sobre propriedades.</p>
+      <p>A saída é um esquema: uma instância para cada fórmula φ(x) da linguagem, infinitas ao todo. É o mesmo recurso dos esquemas de Łukasiewicz, na página de <a href="logica_proposicional.html">lógica proposicional</a>.</p>
+      <p>Na notação, <span class="form">φ(0)</span> é <span class="form">φ[0/x]</span>, e <span class="form">φ(s(x))</span> é <span class="form">φ[s(x)/x]</span> — a substituição da página anterior.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Cálculo</p>
+  <h2>Calcular é derivar</h2>
+  <p class="sub">Um termo tem um valor. Há duas maneiras de chegar a ele: perguntando ao modelo, ou reescrevendo o termo com os axiomas. Os dois painéis abaixo fazem uma coisa cada.</p>
+
+  <div class="cartao">
+    <span class="rot">termo</span>
+    <div class="linha">
+      <input type="text" id="av-ent" spellcheck="false" aria-label="termo" value="s(s(0)) · s(s(s(0)))">
+      <button class="primario" id="av-ir">calcular</button>
+    </div>
+    <div class="chips" id="av-chips"><span class="rot">exemplos</span></div>
+    <p class="erro" id="av-erro" style="margin:.5rem 0 0"></p>
+
+    <div class="paineis">
+      <div class="painel">
+        <span class="rot">valor no modelo ℕ</span>
+        <div class="atr" id="av-atr"></div>
+        <div class="grande" id="av-valor"></div>
+        <table class="subt" id="av-sub"></table>
+      </div>
+      <div class="painel">
+        <span class="rot">reescrita pelos axiomas A3–A6</span>
+        <ol class="passos" id="av-passos"></ol>
+        <p class="fim-rees" id="av-fim"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="nota"><b>Semântica e sintaxe, lado a lado.</b> O painel da esquerda calcula o valor do termo no modelo: é semântica, e precisa de uma atribuição para as variáveis — índices, como na página anterior; o zero não precisa de nada. O da direita não sabe o que os símbolos significam: só troca partes do termo usando A3–A6 da esquerda para a direita, sempre pelo trecho mais interno. Quando o termo não tem variáveis, a reescrita termina num numeral, e cada passo é uma linha de demonstração: uma instância de axioma seguida de substituição de iguais.</div>
+  <div class="nota azul"><b>Experimente x + 0 e depois 0 + x.</b> O primeiro se reescreve em um passo. O segundo não se reescreve nunca: o segundo argumento é x, que não é 0 nem s(…), e nenhum axioma se aplica. É aqui que a indução vai ser necessária — a última derivação correta, mais abaixo, trata exatamente disso.</div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Regras</p>
+  <h2>Um sistema de regras de inferência</h2>
+  <p class="sub">A página de lógica proposicional usava um sistema de Hilbert: três axiomas e uma única regra. Aqui o peso passa para as regras. Os dois tipos de sistema não são rivais — no caso proposicional, Reckhow mostrou que eles se simulam mutuamente, com custo no máximo polinomial —, mas este fica bem mais perto do modo como se raciocina.</p>
+
+  <div class="cartao">
+    <h3>Os esquemas proposicionais, convertidos</h3>
+    <p>São os esquemas de sempre. A conversão está no que pode ocupar os lugares de α, β e γ: agora, qualquer fórmula de primeira ordem. Na derivação “2 ≠ 1”, abaixo, o modus tollens opera sobre igualdades entre termos.</p>
+    <div class="grade-regras">
+      <div class="regra"><span class="nome"><b>MP</b><span>modus ponens</span></span><span class="esq">α, &nbsp;α → β &nbsp;⊢ &nbsp;β</span></div>
+      <div class="regra"><span class="nome"><b>MT</b><span>modus tollens</span></span><span class="esq">α → β, &nbsp;¬β &nbsp;⊢ &nbsp;¬α</span></div>
+      <div class="regra"><span class="nome"><b>Conj</b><span>conjunção</span></span><span class="esq">α, &nbsp;β &nbsp;⊢ &nbsp;α ∧ β</span></div>
+      <div class="regra"><span class="nome"><b>Simp</b><span>simplificação</span></span><span class="esq">α ∧ β &nbsp;⊢ &nbsp;α</span></div>
+      <div class="regra"><span class="nome"><b>Ad</b><span>adição</span></span><span class="esq">α &nbsp;⊢ &nbsp;α ∨ β</span></div>
+      <div class="regra"><span class="nome"><b>SH</b><span>silogismo hipotético</span></span><span class="esq">α → β, &nbsp;β → γ &nbsp;⊢ &nbsp;α → γ</span></div>
+      <div class="regra"><span class="nome"><b>SD</b><span>silogismo disjuntivo</span></span><span class="esq">α ∨ β, &nbsp;¬α &nbsp;⊢ &nbsp;β</span></div>
+      <div class="regra"><span class="nome"><b>PC</b><span>prova condicional</span></span><span class="esq">supondo α, deriva-se β &nbsp;⊢ &nbsp;α → β</span></div>
+    </div>
+    <p style="margin-top:.8rem"><b class="t">A prova condicional</b> abre uma caixa: supõe-se α, e tudo o que se derivar ali depende da suposição. Ao fechar a caixa, conclui-se α → β, e as linhas de dentro não podem mais ser citadas. Na página de lógica proposicional, essa passagem era o teorema da dedução — um metateorema, provado sobre o sistema. Aqui é uma regra, usada dentro dele.</p>
+  </div>
+
+  <div class="cartao" style="margin-top:1rem">
+    <h3>A igualdade</h3>
+    <div class="tabela" style="background:transparent"><table class="regras empilha">
+      <tr><td class="nome"><b>Refl</b><span>reflexividade</span></td><td class="esq">⊢ &nbsp;t = t</td><td class="cond">para qualquer termo t, sem premissa alguma</td></tr>
+      <tr><td class="nome"><b>Subst</b><span>substituição de iguais</span></td><td class="esq">t₁ = t₂, &nbsp;φ &nbsp;⊢ &nbsp;φ′</td><td class="cond">φ′ resulta de φ trocando uma ou mais ocorrências de t₁ por t₂ — sem que nenhuma variável seja capturada</td></tr>
+    </table></div>
+    <p style="margin-top:.7rem">Só duas. A simetria e a transitividade não são primitivas: derivam-se destas. A derivação “a igualdade é simétrica” mostra como.</p>
+  </div>
+
+  <div class="cartao" style="margin-top:1rem">
+    <h3>Os quantificadores</h3>
+    <div class="tabela" style="background:transparent"><table class="regras empilha">
+      <thead><tr><th>regra</th><th>esquema</th><th>condição</th><th>exemplos</th></tr></thead>
+      <tr><td class="nome"><b>IU</b><span>instanciação universal</span></td><td class="esq">∀x φ &nbsp;⊢ &nbsp;φ[t/x]</td>
+          <td class="cond">t é qualquer termo substituível por x em φ. <em>O que vale para todos vale para este.</em></td>
+          <td><button class="lnk" data-der="um-mais-um">1 + 1 = 2</button><button class="lnk fal" data-der="captura">captura</button></td></tr>
+      <tr><td class="nome"><b>GE</b><span>generalização existencial</span></td><td class="esq">φ[t/x] &nbsp;⊢ &nbsp;∃x φ</td>
+          <td class="cond">t substituível por x em φ; escolhe-se quais ocorrências de t abstrair. <em>Se este tem, algum tem.</em></td>
+          <td><button class="lnk" data-der="escolha">GE e a escolha</button></td></tr>
+      <tr><td class="nome"><b>IE</b><span>instanciação existencial</span></td><td class="esq">∃x φ &nbsp;⊢ &nbsp;φ[a/x]</td>
+          <td class="cond">a é uma testemunha nova: não aparece em nenhuma linha anterior, nem na conclusão. <em>Se algum tem, dê-se-lhe um nome provisório.</em></td>
+          <td><button class="lnk" data-der="testemunha">a testemunha entra e sai</button><button class="lnk fal" data-der="reaproveitada">reaproveitada</button></td></tr>
+      <tr><td class="nome"><b>GU</b><span>generalização universal</span></td><td class="esq">φ &nbsp;⊢ &nbsp;∀x φ</td>
+          <td class="cond">x não está livre em nenhuma premissa nem hipótese aberta, e φ não contém testemunha introduzida a partir de fórmula com x livre. <em>O que vale para um qualquer vale para todos — se esse um for mesmo qualquer.</em></td>
+          <td><button class="lnk" data-der="sucessor">todo número tem sucessor</button><button class="lnk fal" data-der="troca">troca</button><button class="lnk fal" data-der="hipotese">hipótese</button></td></tr>
+    </table></div>
+    <p style="margin-top:.8rem">Os axiomas — A1 a A6 e qualquer instância do esquema de indução — podem ocupar qualquer linha, justificados só pelo nome.</p>
+  </div>
+
+  <div class="nota"><b>As condições são o conteúdo das regras.</b> Sem elas, as quatro regras dos quantificadores são quase óbvias. Cada condição bloqueia um sofisma específico — as derivações falaciosas, adiante, mostram qual.</div>
+  <div class="nota azul"><b>Por que “instanciação”.</b> IU e IE produzem uma instância a partir de uma fórmula geral, como se cria um objeto a partir de uma classe na orientação a objetos. A IE é a que mais lembra: cria um indivíduo novo, com identidade própria, que não se confunde com nenhum outro — e que só existe enquanto dura a derivação.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="derivacoes">
+  <p class="kicker">Derivações</p>
+  <h2>Derivações comentadas</h2>
+  <p class="sub">Avance linha a linha — pelos botões ou pelas setas do teclado — para ver de onde cada fórmula vem: as linhas citadas se destacam, e o comentário explica a troca feita. As quatro derivações da segunda fileira estão erradas de propósito. Cada uma viola uma condição das regras, e o verificador aponta onde.</p>
+
+  <div class="chips grupo-der" id="der-cor"><span class="rot">corretas</span></div>
+  <div class="chips grupo-der" id="der-fal"><span class="rot">falaciosas</span></div>
+
+  <div class="cartao der" id="der" tabindex="0" aria-label="derivação selecionada">
+    <h3 id="der-tit"></h3>
+    <p class="enun" id="der-enun"></p>
+    <p class="intro" id="der-intro"></p>
+    <p class="selo" id="der-selo"></p>
+    <div class="tabela"><table>
+      <thead><tr><th>#</th><th>fórmula</th><th>justificativa</th></tr></thead>
+      <tbody id="der-corpo"></tbody>
+    </table></div>
+    <div class="ctrl">
+      <button id="der-ini" title="voltar à primeira linha">⟲ recomeçar</button>
+      <button id="der-ant" title="linha anterior">◀ anterior</button>
+      <button id="der-prox" class="primario" title="próxima linha">próxima ▶</button>
+      <button id="der-tudo" title="mostrar todas as linhas">mostrar tudo</button>
+      <span class="pos" id="der-pos"></span>
+    </div>
+    <div class="comentario" id="der-com" aria-live="polite"></div>
+    <div class="nota moral" id="der-moral" hidden></div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Limites</p>
+  <h2>Por que, desta vez, não há ferramenta</h2>
+  <div class="duas">
+    <div class="cartao">
+      <h3>Não há tabela para percorrer</h3>
+      <p>Na lógica proposicional, uma ferramenta decidia a validade de qualquer fórmula percorrendo a tabela de verdade. Aqui não há tabela: o universo é infinito.</p>
+      <p>E não é falta de engenho. Validade em primeira ordem é <b class="t">indecidível</b>: não existe algoritmo que responda sempre, e corretamente, se uma fórmula qualquer é válida. É o resultado de Church e Turing, de 1936 — o mesmo que fecha o painel da <a href="elipse_dois_focos.html">elipse de dois focos</a>.</p>
+    </div>
+    <div class="cartao">
+      <h3>O que continua mecânico</h3>
+      <p>Verificar uma derivação pronta continua sendo mecânico: cada linha se confere pela forma. As derivações desta página passaram por um verificador que não sabe o que 0, s ou + significam — ele aceita as sete corretas e rejeita as quatro falaciosas exatamente na linha marcada.</p>
+      <p>E há um meio-termo. Se uma sentença é teorema, uma busca exaustiva por derivações acaba por encontrá-la; se não é, a busca pode não terminar nunca. Buscar provas é possível; decidir se existe uma, não.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <a href="logica_predicados.html">← Linguagens de primeira ordem</a> · <a href="index.html">← Matemática Discreta</a> · Prof. André Lemos · IFTM Campus Uberlândia Centro
+</footer>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ================= núcleo: linguagem de primeira ordem ================= */
+
+const SIMBOLOS = "∀∃¬→↔∧∨(),=+·";
+
+const ASS_GERAL = {
+  vars: /^[uvwxyz][0-9₀-₉′']*$/,
+  consts: {c: 1, d: 1},
+  funcs: {f: 1, g: 2},
+  preds: {P: 1, Q: 1, R: 2},
+  infixa: false,
+  testemunhas: []
+};
+
+const ASS_ARIT = {
+  vars: /^[uvwxyz][0-9₀-₉′']*$/,
+  consts: {"0": 1},
+  funcs: {s: 1},
+  preds: {},
+  infixa: true,
+  testemunhas: ["a", "b"]
+};
+
+const ARIDADE = n => n === 1 ? "unário" : n === 2 ? "binário" : n === 3 ? "ternário" : n + "-ário";
+
+function erroEm(msg, pos){ const e = new Error(msg); e.pos = pos; return e; }
+
+function lex(src){
+  const s = String(src)
+    .replace(/<->|<=>/g, "↔").replace(/->|=>/g, "→")
+    .replace(/&/g, "∧").replace(/\|/g, "∨").replace(/[~!]/g, "¬").replace(/\*/g, "·");
+  const t = [];
+  let i = 0;
+  while(i < s.length){
+    const c = s[i];
+    if(/\s/.test(c)){ i++; continue; }
+    if(SIMBOLOS.indexOf(c) >= 0){ t.push(c); i++; continue; }
+    if(/[A-Za-z]/.test(c)){
+      let j = i + 1;
+      while(j < s.length && /[0-9₀-₉′']/.test(s[j])) j++;
+      t.push(s.slice(i, j)); i = j; continue;
+    }
+    if(/[0-9]/.test(c)){ t.push(c); i++; continue; }
+    throw erroEm("“" + c + "” não pertence ao alfabeto", 0);
+  }
+  return t;
+}
+
+/* opcoes: { termo: true } lê um termo em vez de uma fórmula;
+           { testemunhas: true } aceita as constantes provisórias a, b */
+function analisar(src, ass, opcoes){
+  opcoes = opcoes || {};
+  const t = lex(src);
+  let i = 0;
+  const w = k => t[i + (k || 0)];
+  const fim = () => i >= t.length;
+  const erro = m => { throw erroEm(m, i); };
+  const tem = (o, x) => !!x && Object.prototype.hasOwnProperty.call(o, x);
+  const ehVar = x => !!x && ass.vars.test(x);
+  const ehTest = x => !!x && ass.testemunhas.indexOf(x) >= 0;
+  const ehConst = x => tem(ass.consts, x) || (opcoes.testemunhas && ehTest(x));
+  const ehFunc = x => tem(ass.funcs, x);
+  const ehPred = x => tem(ass.preds, x);
+
+  function esperar(x){
+    if(w() === x){ i++; return; }
+    erro(fim() ? "a expressão terminou antes do esperado: faltou “" + x + "”"
+               : "esperava “" + x + "” e encontrei “" + w() + "”");
+  }
+  function desconhecido(x){
+    if(/^[0-9]$/.test(x))
+      erro("“" + x + "” não é símbolo desta linguagem" +
+           (ass.infixa ? ": o único algarismo é 0, e os demais números se escrevem com s — o 1 é s(0)" : ""));
+    if(ehTest(x))
+      erro("“" + x + "” não é símbolo da linguagem: é o nome de uma testemunha, introduzido por IE dentro de uma derivação, e fora dela não designa nada");
+    erro("“" + x + "” não é símbolo desta linguagem");
+  }
+
+  function formula(){ return bic(); }
+  function bic(){ let a = imp(); while(w() === "↔"){ i++; a = {t: "iff", a: a, b: imp()}; } return a; }
+  function imp(){ const a = dis(); if(w() === "→"){ i++; return {t: "imp", a: a, b: imp()}; } return a; }
+  function dis(){ let a = con(); while(w() === "∨"){ i++; a = {t: "or", a: a, b: con()}; } return a; }
+  function con(){ let a = una(); while(w() === "∧"){ i++; a = {t: "and", a: a, b: una()}; } return a; }
+  function una(){
+    if(w() === "¬"){ i++; return {t: "not", a: una()}; }
+    if(w() === "∀" || w() === "∃"){
+      const q = w(); i++;
+      if(!ehVar(w())) erro("depois de “" + q + "” deve vir uma variável" + (fim() ? "" : ", e não “" + w() + "”"));
+      const v = w(); i++;
+      return {t: q === "∀" ? "all" : "ex", v: v, body: una()};
+    }
+    return pri();
+  }
+  function pri(){
+    if(w() === "("){
+      const s0 = i;
+      let e1;
+      try { i++; const f = formula(); esperar(")"); return f; }
+      catch(e){ e1 = e; i = s0; }
+      try { return atom(); }
+      catch(e2){ throw ((e1.pos || 0) > (e2.pos || 0) ? e1 : e2); }
+    }
+    return atom();
+  }
+  function atom(){
+    if(ehPred(w())){
+      const p = w(); i++;
+      if(w() !== "(") erro("o símbolo predicativo " + p + " deve ser seguido de seus argumentos, entre parênteses");
+      i++;
+      const args = [termo()];
+      while(w() === ","){ i++; args.push(termo()); }
+      esperar(")");
+      if(args.length !== ass.preds[p])
+        erro(p + " é " + ARIDADE(ass.preds[p]) + " e recebeu " + args.length + (args.length === 1 ? " argumento" : " argumentos"));
+      return {t: "pred", n: p, args: args};
+    }
+    const a = termo();
+    if(w() !== "=")
+      erro(fim() ? "um termo sozinho não é fórmula: termos nomeiam, não afirmam"
+                 : "esperava “=” e encontrei “" + w() + "”");
+    i++;
+    return {t: "eq", a: a, b: termo()};
+  }
+  function termo(){ return ass.infixa ? soma() : prim(); }
+  function soma(){ let a = prod(); while(w() === "+"){ i++; a = {t: "op", o: "+", a: a, b: prod()}; } return a; }
+  function prod(){ let a = prim(); while(w() === "·"){ i++; a = {t: "op", o: "·", a: a, b: prim()}; } return a; }
+  function prim(){
+    const x = w();
+    if(x === undefined) erro("a expressão terminou antes do esperado: faltou um termo");
+    if(x === "("){ i++; const e = termo(); esperar(")"); return e; }
+    if(ehVar(x)){ i++; return {t: "var", n: x}; }
+    if(ehConst(x)){ i++; return {t: "const", n: x}; }
+    if(ehFunc(x)){
+      i++;
+      if(w() !== "(") erro("o símbolo funcional " + x + " deve ser seguido de seus argumentos, entre parênteses");
+      i++;
+      const args = [termo()];
+      while(w() === ","){ i++; args.push(termo()); }
+      esperar(")");
+      if(args.length !== ass.funcs[x])
+        erro(x + " é " + ARIDADE(ass.funcs[x]) + " e recebeu " + args.length + (args.length === 1 ? " argumento" : " argumentos"));
+      return {t: "fn", n: x, args: args};
+    }
+    if(ehPred(x)) erro("“" + x + "” é símbolo predicativo, e aqui se esperava um termo: predicados formam fórmulas, não termos");
+    if(SIMBOLOS.indexOf(x) >= 0) erro("esperava um termo e encontrei “" + x + "”");
+    desconhecido(x);
+  }
+
+  const r = opcoes.termo ? termo() : formula();
+  if(!fim()) erro("sobrou “" + t.slice(i).join(" ").replace(/([∀∃¬]) /g, "$1") + "” no fim");
+  return r;
+}
+
+/* ---------------- impressão (uma só fonte de verdade: os tokens) ---------------- */
+
+const PREC = {iff: 1, imp: 2, or: 3, and: 4};
+const OPS = {iff: "↔", imp: "→", or: "∨", and: "∧"};
+const ehTermo = n => n.t === "var" || n.t === "const" || n.t === "fn" || n.t === "op";
+
+function tokens(n){
+  const out = [];
+  let prox = 0;
+  const T = (s, x) => out.push(Object.assign({s: s}, x || {}));
+  function termo(u, ctx, amb){
+    const d = !!u.deT;
+    switch(u.t){
+      case "var": T(u.n, {k: "var", b: amb[u.n] !== undefined ? amb[u.n] : null, deT: d}); return;
+      case "const": T(u.n, {k: "const", deT: d}); return;
+      case "fn":
+        T(u.n, {k: "func", deT: d}); T("(", {deT: d});
+        u.args.forEach((a, j) => { if(j) T(", ", {deT: d}); termo(a, 0, amb); });
+        T(")", {deT: d});
+        return;
+      case "op": {
+        const p = u.o === "+" ? 1 : 2, par = p < ctx;
+        if(par) T("(", {deT: d});
+        termo(u.a, p, amb); T(" " + u.o + " ", {k: "op", deT: d}); termo(u.b, p + 1, amb);
+        if(par) T(")", {deT: d});
+        return;
+      }
+    }
+  }
+  function form(u, ctx, amb){
+    switch(u.t){
+      case "eq": termo(u.a, 0, amb); T(" = ", {k: "eq"}); termo(u.b, 0, amb); return;
+      case "pred":
+        T(u.n, {k: "pred"}); T("(");
+        u.args.forEach((a, j) => { if(j) T(", "); termo(a, 0, amb); });
+        T(")");
+        return;
+      case "not":
+        T("¬", {k: "con"});
+        if(u.a.t === "eq" || PREC[u.a.t]){ T("("); form(u.a, 0, amb); T(")"); }
+        else form(u.a, 9, amb);
+        return;
+      case "all": case "ex": {
+        const id = prox++;
+        T(u.t === "all" ? "∀" : "∃", {k: "quant", id: id});
+        T(u.v, {k: "qvar", id: id});
+        const amb2 = Object.assign({}, amb); amb2[u.v] = id;
+        if(u.body.t === "eq" || PREC[u.body.t]){ T(" ("); form(u.body, 0, amb2); T(")"); }
+        else { T(" "); form(u.body, 9, amb2); }
+        return;
+      }
+      default: {
+        const p = PREC[u.t], par = p < ctx;
+        if(par) T("(");
+        form(u.a, (u.t === "and" || u.t === "or") ? p : p + 1, amb);
+        T(" " + OPS[u.t] + " ", {k: "con"});
+        form(u.b, u.t === "imp" ? p : p + 1, amb);
+        if(par) T(")");
+      }
+    }
+  }
+  if(ehTermo(n)) termo(n, 0, {}); else form(n, 0, {});
+  return out;
+}
+const mostrar = n => tokens(n).map(x => x.s).join("");
+const iguais = (a, b) => mostrar(a) === mostrar(b);
+
+/* ---------------- variáveis, constantes, substituição ---------------- */
+
+function livres(n, lig, acc){
+  lig = lig || {}; acc = acc || [];
+  switch(n.t){
+    case "var": if(!lig[n.n] && acc.indexOf(n.n) < 0) acc.push(n.n); break;
+    case "const": break;
+    case "fn": case "pred": n.args.forEach(a => livres(a, lig, acc)); break;
+    case "not": livres(n.a, lig, acc); break;
+    case "all": case "ex": { const l2 = Object.assign({}, lig); l2[n.v] = true; livres(n.body, l2, acc); break; }
+    default: livres(n.a, lig, acc); livres(n.b, lig, acc);
+  }
+  return acc;
+}
+
+function constantes(n, acc){
+  acc = acc || [];
+  switch(n.t){
+    case "const": if(acc.indexOf(n.n) < 0) acc.push(n.n); break;
+    case "var": break;
+    case "fn": case "pred": n.args.forEach(a => constantes(a, acc)); break;
+    case "not": constantes(n.a, acc); break;
+    case "all": case "ex": constantes(n.body, acc); break;
+    default: constantes(n.a, acc); constantes(n.b, acc);
+  }
+  return acc;
+}
+
+function marcar(n){
+  n.deT = true;
+  if(n.args) n.args.forEach(marcar);
+  if(n.a) marcar(n.a);
+  if(n.b) marcar(n.b);
+  return n;
+}
+function copiar(n, marca){
+  const c = JSON.parse(JSON.stringify(n));
+  return marca ? marcar(c) : c;
+}
+
+/* φ[t/x]: troca as ocorrências livres de x por t; informa se houve captura */
+function subst(n, x, t, marca){
+  const fvt = livres(t);
+  let captura = false;
+  const capturadas = [];
+  function rec(u, sob){
+    switch(u.t){
+      case "var": {
+        if(u.n !== x) return u;
+        fvt.forEach(v => {
+          if(sob[v]){ captura = true; if(capturadas.indexOf(v) < 0) capturadas.push(v); }
+        });
+        return copiar(t, marca);
+      }
+      case "const": return u;
+      case "fn": case "pred": return Object.assign({}, u, {args: u.args.map(a => rec(a, sob))});
+      case "not": return {t: "not", a: rec(u.a, sob)};
+      case "all": case "ex": {
+        if(u.v === x) return u;
+        const s2 = Object.assign({}, sob); s2[u.v] = true;
+        return {t: u.t, v: u.v, body: rec(u.body, s2)};
+      }
+      default: return Object.assign({}, u, {a: rec(u.a, sob), b: rec(u.b, sob)});
+    }
+  }
+  const r = rec(n, {});
+  return {r: r, captura: captura, capturadas: capturadas};
+}
+
+/* renomeia as variáveis ligadas que capturariam alguma variável de t */
+function renomearParaSubst(n, x, t){
+  const fvt = livres(t);
+  function nomes(u, acc){
+    acc = acc || new Set();
+    if(u.t === "var") acc.add(u.n);
+    if(u.v) acc.add(u.v);
+    if(u.args) u.args.forEach(a => nomes(a, acc));
+    if(u.a) nomes(u.a, acc);
+    if(u.b) nomes(u.b, acc);
+    if(u.body) nomes(u.body, acc);
+    return acc;
+  }
+  function rec(u){
+    switch(u.t){
+      case "all": case "ex": {
+        if(u.v === x) return u;
+        let v = u.v, body = u.body;
+        if(fvt.indexOf(v) >= 0 && livres(body).indexOf(x) >= 0){
+          const usadas = nomes(body); fvt.forEach(a => usadas.add(a)); usadas.add(x);
+          const nova = ["z", "w", "u", "v", "z′", "w′", "u′"].find(c => !usadas.has(c));
+          body = subst(body, v, {t: "var", n: nova}).r; v = nova;
+        }
+        return {t: u.t, v: v, body: rec(body)};
+      }
+      case "not": return {t: "not", a: rec(u.a)};
+      case "and": case "or": case "imp": case "iff": return {t: u.t, a: rec(u.a), b: rec(u.b)};
+      default: return u;
+    }
+  }
+  return rec(n);
+}
+
+/* ---------------- aritmética: valor e reescrita ---------------- */
+
+function valor(t, atr){
+  switch(t.t){
+    case "var":
+      if(!Object.prototype.hasOwnProperty.call(atr, t.n)) throw new Error("a variável " + t.n + " não tem valor atribuído");
+      return atr[t.n];
+    case "const":
+      if(t.n === "0") return 0;
+      throw new Error("“" + t.n + "” não tem interpretação no modelo padrão");
+    case "fn": return valor(t.args[0], atr) + 1;
+    case "op": { const a = valor(t.a, atr), b = valor(t.b, atr); return t.o === "+" ? a + b : a * b; }
+  }
+}
+
+/* um passo de reescrita, estratégia mais interna à esquerda, pelos axiomas A3–A6 */
+function passo(u){
+  if(u.t === "fn"){
+    const r = passo(u.args[0]);
+    if(!r) return null;
+    r.novo = {t: "fn", n: u.n, args: [r.novo]};
+    return r;
+  }
+  if(u.t === "op"){
+    let r = passo(u.a);
+    if(r){ r.novo = {t: "op", o: u.o, a: r.novo, b: u.b}; return r; }
+    r = passo(u.b);
+    if(r){ r.novo = {t: "op", o: u.o, a: u.a, b: r.novo}; return r; }
+    const b = u.b;
+    const zero = b.t === "const" && b.n === "0";
+    const suc = b.t === "fn" && b.n === "s";
+    let novo = null, ax = null;
+    if(u.o === "+" && zero){ novo = u.a; ax = "A3"; }
+    else if(u.o === "+" && suc){ novo = {t: "fn", n: "s", args: [{t: "op", o: "+", a: u.a, b: b.args[0]}]}; ax = "A4"; }
+    else if(u.o === "·" && zero){ novo = {t: "const", n: "0"}; ax = "A5"; }
+    else if(u.o === "·" && suc){ novo = {t: "op", o: "+", a: {t: "op", o: "·", a: u.a, b: b.args[0]}, b: u.a}; ax = "A6"; }
+    if(!novo) return null;
+    return {novo: novo, ax: ax, redex: mostrar(u), contr: mostrar(novo)};
+  }
+  return null;
+}
+function travado(u){
+  if(u.t === "fn") return travado(u.args[0]);
+  if(u.t === "op") return travado(u.a) || travado(u.b) || u;
+  return null;
+}
+function ehNumeral(u){
+  if(u.t === "const" && u.n === "0") return true;
+  return u.t === "fn" && u.n === "s" && ehNumeral(u.args[0]);
+}
+
+/* ---------------- verificador de derivações ---------------- */
+
+const AXIOMAS = {
+  A1: "∀x ¬(s(x) = 0)",
+  A2: "∀x ∀y (s(x) = s(y) → x = y)",
+  A3: "∀x (x + 0 = x)",
+  A4: "∀x ∀y (x + s(y) = s(x + y))",
+  A5: "∀x (x · 0 = 0)",
+  A6: "∀x ∀y (x · s(y) = x · y + x)"
+};
+
+function instInd(phi, v){
+  const zero = {t: "const", n: "0"};
+  const sv = {t: "fn", n: "s", args: [{t: "var", n: v}]};
+  return {t: "imp",
+    a: {t: "and", a: subst(phi, v, zero).r, b: {t: "all", v: v, body: {t: "imp", a: phi, b: subst(phi, v, sv).r}}},
+    b: {t: "all", v: v, body: phi}};
+}
+
+/* novo resulta de orig trocando ≥ 1 ocorrência de t1 por t2, sem captura */
+function trocado(o, n, t1, t2, sob){
+  if(ehTermo(o) && ehTermo(n) && iguais(o, t1) && iguais(n, t2) && !iguais(t1, t2)){
+    const vs = livres(t1).concat(livres(t2));
+    if(vs.some(v => sob[v])) return {ok: false, msg: "a troca ficaria no alcance de um quantificador que liga uma de suas variáveis"};
+    return {ok: true, n: 1};
+  }
+  if(iguais(o, n)) return {ok: true, n: 0};
+  if(o.t !== n.t) return {ok: false};
+  const junta = rs => {
+    for(const r of rs) if(!r.ok) return r;
+    return {ok: true, n: rs.reduce((s, r) => s + r.n, 0)};
+  };
+  switch(o.t){
+    case "var": case "const": return {ok: false};
+    case "fn": case "pred":
+      if(o.n !== n.n || o.args.length !== n.args.length) return {ok: false};
+      return junta(o.args.map((a, j) => trocado(a, n.args[j], t1, t2, sob)));
+    case "op":
+      if(o.o !== n.o) return {ok: false};
+      return junta([trocado(o.a, n.a, t1, t2, sob), trocado(o.b, n.b, t1, t2, sob)]);
+    case "not": return trocado(o.a, n.a, t1, t2, sob);
+    case "all": case "ex": {
+      if(o.v !== n.v) return {ok: false};
+      const s2 = Object.assign({}, sob); s2[o.v] = true;
+      return trocado(o.body, n.body, t1, t2, s2);
+    }
+    default: return junta([trocado(o.a, n.a, t1, t2, sob), trocado(o.b, n.b, t1, t2, sob)]);
+  }
+}
+
+function verificar(linhas, ass){
+  ass = ass || ASS_ARIT;
+  const P = [], res = [];
+  const abertas = [], fechadas = [], premissas = [];
+  const testemunhas = {};
+  const ler = (s, termo) => analisar(s, ass, {testemunhas: true, termo: !!termo});
+  const fechada = j => fechadas.some(c => j >= c[0] && j <= c[1]);
+
+  for(let k = 1; k <= linhas.length; k++){
+    const l = linhas[k - 1];
+    let msg = null, no = null;
+    try { no = ler(l.f); } catch(e){ msg = "a linha não é fórmula: " + e.message; }
+    P[k] = no;
+    if(!msg) for(const j of (l.de || [])){
+      if(j < 1 || j >= k){ msg = "cita a linha " + j + ", que não vem antes"; break; }
+      if(fechada(j) && l.r !== "PC"){ msg = "a linha " + j + " pertence a uma hipótese já fechada e não pode mais ser citada"; break; }
+      if(!P[j]){ msg = "cita a linha " + j + ", que não é fórmula"; break; }
+    }
+    if(!msg) msg = regra(k, l, no);
+    res.push({ok: !msg, msg: msg});
+
+    if(l.r === "Hip") abertas.push(k);
+    if(l.r === "PC" && abertas.length){ const ini = abertas.pop(); fechadas.push([ini, k - 1]); }
+    if(l.r === "Premissa" && no) premissas.push(no);
+    if(l.r === "IE" && P[l.de[0]]) testemunhas[l.a] = {linha: k, deps: livres(P[l.de[0]])};
+  }
+  const ult = P[linhas.length];
+  if(ult) for(const a in testemunhas){
+    if(constantes(ult).indexOf(a) >= 0 && res[linhas.length - 1].ok)
+      res[linhas.length - 1] = {ok: false, msg: "a testemunha " + a + " não pode aparecer na conclusão"};
+  }
+  return res;
+
+  function regra(k, l, no){
+    const c = (l.de || []).map(j => P[j]);
+    switch(l.r){
+      case "Premissa": return abertas.length ? "uma premissa não pode ficar dentro de uma hipótese" : null;
+      case "Hip": return null;
+      case "A1": case "A2": case "A3": case "A4": case "A5": case "A6":
+        return iguais(no, ler(AXIOMAS[l.r])) ? null : "esta fórmula não é o axioma " + l.r;
+      case "Ind": {
+        const v = l.v || "x";
+        return iguais(no, instInd(ler(l.phi), v)) ? null
+          : "não é a instância do esquema de indução para φ(" + v + ") := " + l.phi;
+      }
+      case "Refl":
+        return no.t === "eq" && iguais(no.a, no.b) ? null : "Refl só produz fórmulas da forma t = t";
+      case "MP": {
+        const a = c[0], b = c[1];
+        const ok = (b.t === "imp" && iguais(b.a, a) && iguais(b.b, no)) ||
+                   (a.t === "imp" && iguais(a.a, b) && iguais(a.b, no));
+        return ok ? null : "MP exige α e α → β, e conclui β";
+      }
+      case "MT": {
+        const a = c[0], b = c[1];
+        const ok = a.t === "imp" && b.t === "not" && iguais(b.a, a.b) && no.t === "not" && iguais(no.a, a.a);
+        return ok ? null : "MT exige α → β e ¬β, e conclui ¬α";
+      }
+      case "Conj":
+        return no.t === "and" && iguais(no.a, c[0]) && iguais(no.b, c[1]) ? null : "Conj exige α e β, e conclui α ∧ β";
+      case "PC": {
+        const h = l.de[0], e = l.de[1];
+        if(!abertas.length || abertas[abertas.length - 1] !== h) return "PC deve fechar a hipótese aberta mais recente";
+        if(e !== k - 1) return "PC deve vir logo depois da última linha da hipótese";
+        return no.t === "imp" && iguais(no.a, P[h]) && iguais(no.b, P[e]) ? null
+          : "PC conclui α → β, sendo α a hipótese e β a última linha da caixa";
+      }
+      case "IU": {
+        const u = c[0];
+        if(u.t !== "all") return "IU se aplica a uma fórmula da forma ∀x φ";
+        if(l.x && l.x !== u.v) return "a variável instanciada é " + u.v + ", não " + l.x;
+        const t = ler(l.t, true), s = subst(u.body, u.v, t);
+        if(s.captura)
+          return l.t + " não é substituível por " + u.v + " em " + mostrar(u.body) + ": " +
+                 s.capturadas.join(", ") + " seria capturada por um quantificador";
+        return iguais(s.r, no) ? null : "trocar " + u.v + " por " + l.t + " não produz esta fórmula";
+      }
+      case "GE": {
+        if(no.t !== "ex") return "GE conclui uma fórmula da forma ∃x φ";
+        if(l.x && l.x !== no.v) return "a variável quantificada é " + no.v + ", não " + l.x;
+        const t = ler(l.t, true), s = subst(no.body, no.v, t);
+        if(s.captura) return l.t + " não é substituível por " + no.v + ": haveria captura";
+        return iguais(s.r, c[0]) ? null : "trocar " + no.v + " por " + l.t + " no corpo não devolve a linha " + l.de[0];
+      }
+      case "IE": {
+        const u = c[0];
+        if(u.t !== "ex") return "IE se aplica a uma fórmula da forma ∃x φ";
+        const a = l.a;
+        if(ass.testemunhas.indexOf(a) < 0) return a + " não está disponível como testemunha";
+        for(let j = 1; j < k; j++)
+          if(P[j] && constantes(P[j]).indexOf(a) >= 0)
+            return "a testemunha " + a + " já aparece na linha " + j + ": IE exige um nome novo";
+        return iguais(subst(u.body, u.v, {t: "const", n: a}).r, no) ? null
+          : "trocar " + u.v + " por " + a + " não produz esta fórmula";
+      }
+      case "GU": {
+        if(no.t !== "all") return "GU conclui uma fórmula da forma ∀x φ";
+        const x = no.v;
+        if(!iguais(no.body, c[0])) return "GU conclui ∀x φ a partir de φ";
+        for(const p of premissas) if(livres(p).indexOf(x) >= 0) return x + " está livre numa premissa";
+        for(const h of abertas) if(P[h] && livres(P[h]).indexOf(x) >= 0)
+          return x + " está livre na hipótese aberta da linha " + h;
+        for(const a of constantes(c[0])) if(testemunhas[a] && testemunhas[a].deps.indexOf(x) >= 0)
+          return "a testemunha " + a + " foi introduzida na linha " + testemunhas[a].linha +
+                 " a partir de uma fórmula em que " + x + " estava livre: " + a + " depende de " + x;
+        return null;
+      }
+      case "Subst": {
+        const e = c[0], phi = c[1];
+        if(e.t !== "eq") return "Subst exige, na primeira linha citada, uma igualdade";
+        const r = trocado(phi, no, e.a, e.b, {});
+        if(!r.ok) return r.msg || "esta fórmula não resulta da linha " + l.de[1] + " trocando " + mostrar(e.a) + " por " + mostrar(e.b);
+        return r.n >= 1 ? null : "nenhuma ocorrência foi trocada";
+      }
+    }
+    return "regra desconhecida: " + l.r;
+  }
+}
+
+/* rótulo da justificativa, gerado a partir dos dados */
+function justificativa(l){
+  switch(l.r){
+    case "Premissa": return "premissa";
+    case "Hip": return "hipótese";
+    case "Ind": return "Ind, φ(" + (l.v || "x") + ") := " + l.phi;
+    case "Refl": return "Refl";
+    case "IU": return "IU " + l.de[0] + ", " + l.x + " := " + l.t;
+    case "GE": return "GE " + l.de[0] + ", " + l.x + " := " + l.t;
+    case "IE": return "IE " + l.de[0] + ", testemunha " + l.a;
+    case "GU": return "GU " + l.de[0];
+    case "PC": return "PC " + l.de[0] + "–" + l.de[1];
+    default: return l.de && l.de.length ? l.r + " " + l.de.join(", ") : l.r;
+  }
+}
+
+
+/* ================= derivações comentadas ================= */
+
+const DERIVACOES = [
+
+{ id: "um-mais-um", grupo: "corretas", titulo: "1 + 1 = 2",
+  enunciado: "⊢ s(0) + s(0) = s(s(0))",
+  intro: "A linguagem não tem os símbolos 1 e 2: tem 0 e o sucessor. Provar que um mais um é dois é provar uma igualdade entre dois termos — e isso só se faz com as regras da igualdade.",
+  linhas: [
+    {f: "∀x ∀y (x + s(y) = s(x + y))", r: "A4",
+     nota: "O axioma da soma com sucessor. Os dois quantificadores serão instanciados um de cada vez, de fora para dentro."},
+    {f: "∀y (s(0) + s(y) = s(s(0) + y))", r: "IU", de: [1], x: "x", t: "s(0)",
+     nota: "Instancia-se o quantificador externo: cada ocorrência livre de x no corpo é trocada pelo termo s(0). O ∀y continua lá."},
+    {f: "s(0) + s(0) = s(s(0) + 0)", r: "IU", de: [2], x: "y", t: "0",
+     nota: "Agora y := 0, e s(y) vira s(0). Lida em voz alta, a linha diz: um mais um é o sucessor de um mais zero."},
+    {f: "∀x (x + 0 = x)", r: "A3",
+     nota: "O axioma da soma com zero."},
+    {f: "s(0) + 0 = s(0)", r: "IU", de: [4], x: "x", t: "s(0)",
+     nota: "Um mais zero é um."},
+    {f: "s(0) + s(0) = s(s(0))", r: "Subst", de: [5, 3],
+     nota: "Substituição de iguais: na linha 3, o termo s(0) + 0 é trocado por s(0), com base na igualdade da linha 5. Sem uma regra assim, as linhas 3 e 5 ficariam lado a lado sem nunca se tocar."}
+  ],
+  moral: "Seis linhas, duas regras de quantificador e uma de igualdade. O cálculo que uma criança faz de cabeça tem, na linguagem formal, a estrutura de uma demonstração." },
+
+{ id: "dois-nao-um", grupo: "corretas", titulo: "2 ≠ 1",
+  enunciado: "⊢ ¬(s(s(0)) = s(0))",
+  intro: "Uma desigualdade. A1 diz que zero não é sucessor de ninguém; A2, que números com o mesmo sucessor são iguais. Combinados por uma regra proposicional, bastam.",
+  linhas: [
+    {f: "∀x ∀y (s(x) = s(y) → x = y)", r: "A2",
+     nota: "Se os sucessores coincidem, os números coincidem."},
+    {f: "∀y (s(s(0)) = s(y) → s(0) = y)", r: "IU", de: [1], x: "x", t: "s(0)",
+     nota: "x := s(0). Repare que s(x) vira s(s(0)): a troca acontece dentro do termo."},
+    {f: "s(s(0)) = s(0) → s(0) = 0", r: "IU", de: [2], x: "y", t: "0",
+     nota: "y := 0. Se dois fosse um, então um seria zero."},
+    {f: "∀x ¬(s(x) = 0)", r: "A1",
+     nota: "Zero não é sucessor de nenhum número."},
+    {f: "¬(s(0) = 0)", r: "IU", de: [4], x: "x", t: "0",
+     nota: "Em particular, zero não é sucessor de zero: um não é zero."},
+    {f: "¬(s(s(0)) = s(0))", r: "MT", de: [3, 5],
+     nota: "Modus tollens: o esquema proposicional de sempre, agora com fórmulas de primeira ordem nas posições de α e β. É isso a conversão dos esquemas — a regra não mudou; mudou o que pode ocupar os seus lugares."}
+  ],
+  moral: "Com A1 e A2, cada desigualdade entre numerais se prova assim, um caso de cada vez. Numerais diferentes nomeiam números diferentes: o sucessor nunca volta para trás." },
+
+{ id: "sucessor", grupo: "corretas", titulo: "todo número tem sucessor",
+  enunciado: "⊢ ∀x ∃y (y = s(x))",
+  intro: "Três linhas, com as duas generalizações em sequência. Esta sentença será o ponto de partida de duas das derivações falaciosas.",
+  linhas: [
+    {f: "s(x) = s(x)", r: "Refl",
+     nota: "Todo termo é igual a si mesmo — inclusive s(x), em que x está livre."},
+    {f: "∃y (y = s(x))", r: "GE", de: [1], x: "y", t: "s(x)",
+     nota: "Generalização existencial sobre a primeira ocorrência de s(x): há um y que é igual a s(x). A segunda ocorrência fica como está."},
+    {f: "∀x ∃y (y = s(x))", r: "GU", de: [2],
+     nota: "Generalização universal sobre x. É legítima: x não está livre em nenhuma premissa nem hipótese — não há nenhuma. O x da linha 2 é, de fato, um número qualquer."}
+  ],
+  moral: "A ordem dos quantificadores conta: primeiro ∀x, depois ∃y. O y pode depender de x — e depende: é o sucessor dele." },
+
+{ id: "escolha", grupo: "corretas", titulo: "GE e a escolha",
+  enunciado: "s(0) + s(0) = s(s(0)) ⊢ três conclusões",
+  intro: "Da mesma linha saem conclusões diferentes, conforme as ocorrências que se decide abstrair. A IU fica determinada pelo termo escolhido; a GE, não.",
+  linhas: [
+    {f: "s(0) + s(0) = s(s(0))", r: "Premissa",
+     nota: "Derivada em “1 + 1 = 2”."},
+    {f: "∃x (x + x = s(s(0)))", r: "GE", de: [1], x: "x", t: "s(0)",
+     nota: "Abstraem-se as duas ocorrências do lado esquerdo: algum número somado a si mesmo dá dois."},
+    {f: "∃x (s(0) + x = s(s(0)))", r: "GE", de: [1], x: "x", t: "s(0)",
+     nota: "Só a segunda ocorrência: algum número somado a um dá dois."},
+    {f: "∃x (x + x = s(x))", r: "GE", de: [1], x: "x", t: "s(0)",
+     nota: "As duas do lado esquerdo e mais a que está dentro de s(s(0)): algum número somado a si mesmo é o seu sucessor. Também é verdade — é o um."}
+  ],
+  moral: "Nas três linhas, trocar x por s(0) devolve exatamente a linha 1. A regra não diz quais ocorrências abstrair: a escolha é de quem deriva, e é ela que decide o que a conclusão afirma." },
+
+{ id: "simetria", grupo: "corretas", titulo: "a igualdade é simétrica",
+  enunciado: "⊢ ∀x (x = x + 0)",
+  intro: "Entre as regras da igualdade não há simetria. Nem é preciso: ela se deriva de Refl e Subst. Aqui, aplicada a A3, que passa a valer lida da direita para a esquerda.",
+  linhas: [
+    {f: "∀x (x + 0 = x)", r: "A3",
+     nota: "O axioma, na forma em que foi enunciado."},
+    {f: "x + 0 = x", r: "IU", de: [1], x: "x", t: "x",
+     nota: "Instancia-se x pela própria variável x. É permitido: t pode ser qualquer termo, inclusive uma variável."},
+    {f: "x + 0 = x + 0", r: "Refl",
+     nota: "Todo termo é igual a si mesmo."},
+    {f: "x = x + 0", r: "Subst", de: [2, 3],
+     nota: "Na linha 3, troca-se só a primeira ocorrência de x + 0 por x, com base na linha 2. A segunda fica. O resultado é a igualdade da linha 2, invertida."},
+    {f: "∀x (x = x + 0)", r: "GU", de: [4],
+     nota: "Legítima: x não está livre em nenhuma premissa ou hipótese."}
+  ],
+  moral: "O procedimento é geral: de t₁ = t₂ e de t₁ = t₁, dado por Refl, Subst produz t₂ = t₁. Toda derivação que precisar inverter uma igualdade pode usar esse atalho — é uma regra derivada." },
+
+{ id: "testemunha", grupo: "corretas", titulo: "a testemunha entra e sai",
+  enunciado: "∃x (s(x) = s(s(0))) ⊢ ∃x (x = s(0))",
+  intro: "A IE dá um nome provisório a um indivíduo que se sabe existir. O nome precisa ser novo, e não pode sobreviver até a conclusão.",
+  linhas: [
+    {f: "∃x (s(x) = s(s(0)))", r: "Premissa",
+     nota: "Algum número tem o dois como sucessor."},
+    {f: "s(a) = s(s(0))", r: "IE", de: [1], a: "a",
+     nota: "Chama-se a esse número de a. O nome é novo: não aparece em nenhuma linha anterior. E a não é símbolo da linguagem da aritmética — não tem interpretação; serve só para falar desse indivíduo dentro da derivação."},
+    {f: "∀x ∀y (s(x) = s(y) → x = y)", r: "A2",
+     nota: "Sucessores iguais, números iguais."},
+    {f: "∀y (s(a) = s(y) → a = y)", r: "IU", de: [3], x: "x", t: "a",
+     nota: "A IU aceita qualquer termo, inclusive a testemunha."},
+    {f: "s(a) = s(s(0)) → a = s(0)", r: "IU", de: [4], x: "y", t: "s(0)",
+     nota: "y := s(0)."},
+    {f: "a = s(0)", r: "MP", de: [2, 5],
+     nota: "O indivíduo chamado a é o um."},
+    {f: "∃x (x = s(0))", r: "GE", de: [6], x: "x", t: "a",
+     nota: "E a testemunha sai de cena: a conclusão fala de “algum número”, sem nomeá-lo. Se a ficasse na conclusão, ela afirmaria algo de um indivíduo que ninguém sabe qual é."}
+  ],
+  moral: "Tudo o que se sabe da testemunha é o que a fórmula de origem diz dela. Por isso o nome tem de ser novo, e por isso não pode sair da derivação." },
+
+{ id: "inducao", grupo: "corretas", titulo: "0 + x = x exige indução",
+  enunciado: "⊢ ∀x (0 + x = x)",
+  intro: "x + 0 = x é o axioma A3, e vale em uma linha. 0 + x = x parece o mesmo enunciado com os lados trocados — e custa doze linhas e o esquema de indução. A diferença está em A3 e A4: eles definem a soma por recursão no segundo argumento. Com o zero à direita, a definição resolve; com o zero à esquerda, não.",
+  linhas: [
+    {f: "∀x (x + 0 = x)", r: "A3",
+     nota: "O caso base virá daqui."},
+    {f: "0 + 0 = 0", r: "IU", de: [1], x: "x", t: "0",
+     nota: "Base da indução: a propriedade vale para 0."},
+    {f: "∀x ∀y (x + s(y) = s(x + y))", r: "A4",
+     nota: "O passo virá daqui."},
+    {f: "∀y (0 + s(y) = s(0 + y))", r: "IU", de: [3], x: "x", t: "0",
+     nota: "x := 0: zero mais o sucessor de y é o sucessor de zero mais y."},
+    {f: "0 + x = x", r: "Hip",
+     nota: "Hipótese de indução: supõe-se que a propriedade vale para um x qualquer. Abre-se uma caixa, e tudo o que vier dentro dela depende dessa suposição."},
+    {f: "0 + s(x) = s(0 + x)", r: "IU", de: [4], x: "y", t: "x",
+     nota: "y := x. A linha 4 está fora da caixa, e pode ser citada de dentro dela."},
+    {f: "0 + s(x) = s(x)", r: "Subst", de: [5, 6],
+     nota: "Usa-se a hipótese: dentro de s(0 + x), troca-se 0 + x por x."},
+    {f: "0 + x = x → 0 + s(x) = s(x)", r: "PC", de: [5, 7],
+     nota: "Prova condicional: fecha-se a caixa, e a suposição vira antecedente de uma implicação. Na página de lógica proposicional, esta passagem era o teorema da dedução, um metateorema; aqui é uma regra."},
+    {f: "∀x (0 + x = x → 0 + s(x) = s(x))", r: "GU", de: [8],
+     nota: "Só agora se generaliza. Dentro da caixa, x estava livre numa hipótese aberta, e a GU seria ilegítima — a derivação falaciosa “generalizar dentro da hipótese” mostra o que aconteceria."},
+    {f: "0 + 0 = 0 ∧ ∀x (0 + x = x → 0 + s(x) = s(x))", r: "Conj", de: [2, 9],
+     nota: "Base e passo, lado a lado."},
+    {f: "(0 + 0 = 0 ∧ ∀x (0 + x = x → 0 + s(x) = s(x))) → ∀x (0 + x = x)", r: "Ind", phi: "0 + x = x", v: "x",
+     nota: "A instância do esquema de indução para esta φ. Compare com o esquema: φ(0) é 0 + 0 = 0; φ(s(x)) é 0 + s(x) = s(x)."},
+    {f: "∀x (0 + x = x)", r: "MP", de: [10, 11],
+     nota: "E a conclusão."}
+  ],
+  moral: "Os dois enunciados são verdadeiros em ℕ, e ambos são teoremas. Mas um é axioma e o outro exige indução. O custo de uma demonstração não acompanha a aparência do enunciado: depende de como os conceitos foram definidos." },
+
+/* ---------------- falaciosas ---------------- */
+
+{ id: "troca", grupo: "falaciosas", titulo: "troca de quantificadores",
+  enunciado: "∀x ∃y (y = s(x)) ⊬ ∃y ∀x (y = s(x))",
+  intro: "“Todo número tem um sucessor” é verdadeira. “Existe um número que é sucessor de todos” é falsa. A derivação abaixo só chega de uma à outra porque um passo viola uma condição.",
+  linhas: [
+    {f: "∀x ∃y (y = s(x))", r: "Premissa",
+     nota: "Derivada em “todo número tem sucessor”."},
+    {f: "∃y (y = s(x))", r: "IU", de: [1], x: "x", t: "x",
+     nota: "Para um x qualquer, há um y que é o seu sucessor."},
+    {f: "a = s(x)", r: "IE", de: [2], a: "a",
+     nota: "Esse y ganha o nome a. Atenção: a foi escolhido depois de x, e em função dele — a é o sucessor deste x."},
+    {f: "∀x (a = s(x))", r: "GU", de: [3], erro: true,
+     nota: "Aqui está o defeito. A GU diz que o que vale para um x qualquer vale para todos. Mas este x não é qualquer em relação a a: a foi escolhido a partir dele. Generalizar sobre x mantendo a fixo é dizer que o mesmo a serve para todo x."},
+    {f: "∃y ∀x (y = s(x))", r: "GE", de: [4], x: "y", t: "a",
+     nota: "O resto é legítimo — e chega a uma falsidade: algum número seria sucessor de todos, inclusive de si mesmo."}
+  ],
+  moral: "A condição da GU sobre testemunhas existe para impedir exatamente esta troca. ∀x ∃y permite que y dependa de x; ∃y ∀x exige um y que não dependa de nada." },
+
+{ id: "reaproveitada", grupo: "falaciosas", titulo: "testemunha reaproveitada",
+  enunciado: "⊬ s(0) = 0 ∧ ¬(s(0) = 0)",
+  intro: "Existe um número que é o zero, e existe um número que é o um. Nada garante que seja o mesmo — mas, se o mesmo nome for usado para os dois, a derivação conclui que um é zero, e contradiz A1.",
+  linhas: [
+    {f: "0 = 0", r: "Refl", nota: "Zero é igual a zero."},
+    {f: "∃x (x = 0)", r: "GE", de: [1], x: "x", t: "0",
+     nota: "Existe um número igual a zero."},
+    {f: "s(0) = s(0)", r: "Refl", nota: "Um é igual a um."},
+    {f: "∃x (x = s(0))", r: "GE", de: [3], x: "x", t: "s(0)",
+     nota: "Existe um número igual a um."},
+    {f: "a = 0", r: "IE", de: [2], a: "a",
+     nota: "O primeiro recebe o nome a."},
+    {f: "a = s(0)", r: "IE", de: [4], a: "a", erro: true,
+     nota: "O segundo recebe o mesmo nome — e esse é o erro. A IE exige um nome novo: sabe-se que existe um número igual a um, mas nada autoriza a supor que seja o mesmo já chamado de a."},
+    {f: "s(0) = 0", r: "Subst", de: [6, 5],
+     nota: "Daqui em diante tudo é legítimo: se a = s(0), pode-se trocar a por s(0) em a = 0."},
+    {f: "∀x ¬(s(x) = 0)", r: "A1", nota: "Zero não é sucessor de ninguém."},
+    {f: "¬(s(0) = 0)", r: "IU", de: [8], x: "x", t: "0", nota: "Um não é zero."},
+    {f: "s(0) = 0 ∧ ¬(s(0) = 0)", r: "Conj", de: [7, 9],
+     nota: "Uma contradição, a partir de axiomas apenas. Se o passo 6 fosse permitido, a aritmética de Peano seria inconsistente — e, como se viu na página de lógica proposicional, de uma contradição se deriva qualquer coisa."}
+  ],
+  moral: "Cada IE introduz um indivíduo de que só se sabe o que a fórmula diz. Duas IE, dois indivíduos — que podem ou não coincidir; a derivação não tem como saber." },
+
+{ id: "captura", grupo: "falaciosas", titulo: "captura de variável",
+  enunciado: "∀x ∃y (y = s(x)) ⊬ ∃y (y = s(y))",
+  intro: "A premissa diz que todo número tem sucessor. A instância certa para x := y diria que y tem sucessor. A troca cega de x por y diz outra coisa.",
+  linhas: [
+    {f: "∀x ∃y (y = s(x))", r: "Premissa",
+     nota: "Derivada em “todo número tem sucessor”."},
+    {f: "∃y (y = s(y))", r: "IU", de: [1], x: "x", t: "y", erro: true,
+     nota: "O x ocorre dentro do alcance de ∃y. Trocado por y, o novo y deixa de apontar para fora da fórmula e passa a ser ligado pelo ∃y: foi capturado. A linha diz que algum número é o próprio sucessor — o que é falso."}
+  ],
+  moral: "A instância correta exige renomear antes a variável ligada: ∀x ∃z (z = s(x)) diz o mesmo que a premissa, e dela a IU com x := y dá ∃z (z = s(y)) — y tem sucessor. O erro não é de significado: é de grafemas. Duas marcas iguais, que deveriam ser distintas." },
+
+{ id: "hipotese", grupo: "falaciosas", titulo: "generalizar dentro da hipótese",
+  enunciado: "⊬ s(0) = 0 ∧ ¬(s(0) = 0)",
+  intro: "Supor que um x é zero e concluir que todos são: o passo que a derivação por indução evitou, esperando a hipótese se fechar antes de generalizar.",
+  linhas: [
+    {f: "x = 0", r: "Hip", nota: "Supõe-se que x é zero."},
+    {f: "∀x (x = 0)", r: "GU", de: [1], erro: true,
+     nota: "O erro: x está livre numa hipótese ainda aberta. Dentro da caixa, x não é um número qualquer — é um número de que se supôs alguma coisa."},
+    {f: "x = 0 → ∀x (x = 0)", r: "PC", de: [1, 2],
+     nota: "Fecha-se a caixa: se x é zero, todos são zero."},
+    {f: "∀x (x = 0 → ∀x (x = 0))", r: "GU", de: [3],
+     nota: "Esta GU é legítima: a hipótese já se fechou. O defeito está todo na linha 2."},
+    {f: "0 = 0 → ∀x (x = 0)", r: "IU", de: [4], x: "x", t: "0",
+     nota: "x := 0. Só a ocorrência livre é trocada; o x do ∀x interno está ligado e fica."},
+    {f: "0 = 0", r: "Refl", nota: "Zero é zero."},
+    {f: "∀x (x = 0)", r: "MP", de: [6, 5], nota: "Todo número é zero."},
+    {f: "s(0) = 0", r: "IU", de: [7], x: "x", t: "s(0)", nota: "Em particular, o um."},
+    {f: "∀x ¬(s(x) = 0)", r: "A1", nota: "Mas zero não é sucessor de ninguém."},
+    {f: "¬(s(0) = 0)", r: "IU", de: [9], x: "x", t: "0", nota: "Um não é zero."},
+    {f: "s(0) = 0 ∧ ¬(s(0) = 0)", r: "Conj", de: [8, 10], nota: "Contradição."}
+  ],
+  moral: "A condição da GU sobre hipóteses abertas é o que separa a indução de um sofisma. No passo indutivo, supõe-se a propriedade para um x e prova-se para s(x); a generalização só incide sobre a implicação, depois de fechada a caixa." }
+];
+
+
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/* ================= avaliador ================= */
+
+const AV_EX = ["s(0) + s(0)", "s(s(0)) · s(s(s(0)))", "(s(0) + s(0)) · s(s(0))", "x + 0", "0 + x", "x + s(s(0))", "s(x) · s(0)"];
+const avEnt = document.getElementById("av-ent");
+const avErro = document.getElementById("av-erro");
+const avAtr = document.getElementById("av-atr");
+const avValor = document.getElementById("av-valor");
+const avSub = document.getElementById("av-sub");
+const avPassos = document.getElementById("av-passos");
+const avFim = document.getElementById("av-fim");
+const avChips = document.getElementById("av-chips");
+let avTermo = null;
+const atribuicao = {};
+
+AV_EX.forEach(t => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.textContent = t; b.dataset.t = t;
+  b.addEventListener("click", () => { avEnt.value = t; calcular(); });
+  avChips.appendChild(b);
+});
+
+function subtermos(t, acc){
+  acc = acc || [];
+  if(t.args) t.args.forEach(a => subtermos(a, acc));
+  if(t.a){ subtermos(t.a, acc); subtermos(t.b, acc); }
+  const k = mostrar(t);
+  if(!acc.some(u => u.k === k)) acc.push({k: k, t: t});
+  return acc;
+}
+
+function mostrarValor(){
+  if(!avTermo) return;
+  try {
+    const v = valor(avTermo, atribuicao);
+    avValor.innerHTML = esc(v) + (livres(avTermo).length ? "<small>com esta atribuição</small>" : "");
+    const sub = subtermos(avTermo).filter(u => u.t.t !== "const" || u.k !== "0");
+    const mostra = sub.slice(-12);
+    avSub.innerHTML = (sub.length > mostra.length ? '<tr><td colspan="2" style="color:var(--dim)">… ' + (sub.length - mostra.length) + " subtermos menores omitidos</td></tr>" : "") +
+      mostra.map(u => "<tr><td>" + esc(u.k) + "</td><td>" + esc(valor(u.t, atribuicao)) + "</td></tr>").join("");
+  } catch(e){
+    avValor.textContent = "—";
+    avSub.innerHTML = "";
+    avErro.textContent = e.message + ".";
+  }
+}
+
+function calcular(){
+  avErro.textContent = "";
+  const src = avEnt.value.trim();
+  avChips.querySelectorAll(".chip").forEach(b => b.classList.toggle("sel", b.dataset.t === src));
+  try { avTermo = analisar(src, ASS_ARIT, {termo: true}); }
+  catch(e){
+    avTermo = null;
+    avErro.textContent = "Não é termo: " + e.message + ".";
+    avAtr.innerHTML = ""; avValor.textContent = ""; avSub.innerHTML = ""; avPassos.innerHTML = ""; avFim.textContent = "";
+    return;
+  }
+  /* atribuição: uma caixa para cada variável livre */
+  const vs = livres(avTermo);
+  avAtr.innerHTML = vs.length
+    ? vs.map(v => '<label>' + esc(v) + ' = <input type="number" min="0" max="999" data-v="' + esc(v) + '" value="' +
+                  (atribuicao[v] !== undefined ? atribuicao[v] : 2) + '"></label>').join("")
+    : "";
+  avAtr.querySelectorAll("input").forEach(inp => {
+    const v = inp.dataset.v;
+    atribuicao[v] = Math.max(0, Math.min(999, parseInt(inp.value, 10) || 0));
+    inp.addEventListener("input", () => { atribuicao[v] = Math.max(0, Math.min(999, parseInt(inp.value, 10) || 0)); mostrarValor(); });
+  });
+  mostrarValor();
+
+  /* reescrita */
+  const LIM = 60;
+  let t = avTermo, n = 0, h = '<li><span class="tag ini">início</span><span class="t">' + esc(mostrar(t)) + "</span></li>";
+  let r;
+  while(n < LIM && (r = passo(t))){
+    t = r.novo; n++;
+    h += '<li><span class="tag" title="' + esc(r.redex + "  ⇝  " + r.contr) + '">' + r.ax + '</span><span class="t">' + esc(mostrar(t)) + "</span></li>";
+  }
+  avPassos.innerHTML = h;
+  if(n >= LIM && passo(t)){
+    avFim.innerHTML = '<b class="mal">Interrompido em ' + LIM + " passos.</b> A reescrita terminaria, mas a lista ficaria longa demais.";
+  } else if(ehNumeral(t)){
+    const k = valor(t, {});
+    avFim.innerHTML = '<b class="ok">Chegou a um numeral</b> em ' + n + (n === 1 ? " passo" : " passos") +
+      ": o numeral de " + k + ". Nenhum passo consultou o significado de s, + ou ·.";
+  } else if(!travado(t)){
+    avFim.innerHTML = '<b class="ok">Chegou a uma forma sem soma nem produto</b>' + (n ? " em " + n + (n === 1 ? " passo" : " passos") : "") +
+      ": " + esc(mostrar(t)) + ". Não é um numeral — contém " + esc(livres(t).join(", ")) +
+      ", cujo valor depende da atribuição —, mas os axiomas já não têm o que fazer.";
+  } else {
+    const tv = travado(t);
+    avFim.innerHTML = '<b class="mal">A reescrita parou</b>' + (n ? " depois de " + n + (n === 1 ? " passo" : " passos") : " sem dar nenhum passo") +
+      (tv ? ": em " + esc(mostrar(tv)) + ", o segundo argumento, " + esc(mostrar(tv.b)) + ", não é 0 nem da forma s(…), e nenhum axioma se aplica." : ".");
+  }
+}
+document.getElementById("av-ir").addEventListener("click", calcular);
+avEnt.addEventListener("keydown", e => { if(e.key === "Enter") calcular(); });
+calcular();
+
+/* ================= derivações ================= */
+
+const derCard = document.getElementById("der");
+const corpo = document.getElementById("der-corpo");
+const com = document.getElementById("der-com");
+const moral = document.getElementById("der-moral");
+const pos = document.getElementById("der-pos");
+let D = null, visiveis = 1, selecionada = 1, profundidades = [], verif = [];
+
+function profundidadesDe(ls){
+  const out = []; let d = 0;
+  ls.forEach(l => {
+    if(l.r === "Hip"){ d++; out.push(d); }
+    else if(l.r === "PC"){ d = Math.max(0, d - 1); out.push(d); }
+    else out.push(d);
+  });
+  return out;
+}
+
+function citadasDe(l){
+  if(!l.de) return [];
+  if(l.r === "PC"){ const r = []; for(let j = l.de[0]; j <= l.de[1]; j++) r.push(j); return r; }
+  return l.de;
+}
+
+function escolher(id, rolar){
+  D = DERIVACOES.find(d => d.id === id);
+  if(!D) return;
+  document.querySelectorAll("#der-cor .chip, #der-fal .chip").forEach(b => b.classList.toggle("sel", b.dataset.id === id));
+  document.getElementById("der-tit").textContent = D.titulo;
+  document.getElementById("der-enun").textContent = D.enunciado;
+  document.getElementById("der-intro").textContent = D.intro;
+  verif = verificar(D.linhas, ASS_ARIT);
+  const rej = verif.map((v, k) => v.ok ? null : k + 1).filter(x => x);
+  const selo = document.getElementById("der-selo");
+  if(!rej.length){
+    selo.className = "selo ok";
+    selo.textContent = "✓ Verificador mecânico: " + (D.linhas.length === 1 ? "a linha confere." : "as " + D.linhas.length + " linhas conferem.");
+  } else {
+    selo.className = "selo mal";
+    selo.textContent = "✗ Verificador mecânico: rejeita a linha " + rej.join(", ") + ".";
+  }
+  profundidades = profundidadesDe(D.linhas);
+  corpo.innerHTML = D.linhas.map((l, j) => {
+    const k = j + 1, d = profundidades[j];
+    return '<tr data-k="' + k + '"' + (l.erro ? ' class="erro"' : "") + '>' +
+      '<td class="n">' + k + "</td>" +
+      '<td class="fo"><div class="cx" style="--d:' + d + '"><span' + (l.r === "Hip" ? ' class="hip"' : "") + ">" + esc(l.f) + "</span></div></td>" +
+      '<td class="ju">' + esc(justificativa(l)) + "</td></tr>";
+  }).join("");
+  corpo.querySelectorAll("tr").forEach(tr => tr.addEventListener("click", () => {
+    selecionada = +tr.dataset.k; atualizar();
+  }));
+  moral.textContent = D.moral;
+  visiveis = 1; selecionada = 1;
+  atualizar();
+  if(rolar) derCard.scrollIntoView({behavior: "smooth", block: "start"});
+}
+
+function atualizar(){
+  const n = D.linhas.length;
+  const l = D.linhas[selecionada - 1];
+  const cit = citadasDe(l);
+  corpo.querySelectorAll("tr").forEach(tr => {
+    const k = +tr.dataset.k;
+    tr.classList.toggle("oculta", k > visiveis);
+    tr.classList.toggle("atual", k === selecionada);
+    tr.classList.toggle("citada", cit.indexOf(k) >= 0 && k !== selecionada);
+  });
+  const v = verif[selecionada - 1];
+  com.className = "comentario" + (l.erro ? " erro" : "");
+  com.innerHTML = '<span class="cab">linha ' + selecionada + " · " + esc(justificativa(l)) + (l.erro ? " · passo ilegítimo" : "") + "</span>" +
+    esc(l.nota) + (!v.ok ? '<span class="maq">O verificador diz: ' + esc(v.msg) + ".</span>" : "");
+  pos.textContent = "linha " + selecionada + " de " + n;
+  moral.hidden = visiveis < n;
+  document.getElementById("der-ant").disabled = selecionada <= 1;
+  document.getElementById("der-prox").disabled = selecionada >= n;
+  document.getElementById("der-ini").disabled = visiveis <= 1 && selecionada === 1;
+  document.getElementById("der-tudo").disabled = visiveis >= n;
+}
+
+function avancar(){
+  if(selecionada < D.linhas.length){ selecionada++; visiveis = Math.max(visiveis, selecionada); atualizar(); }
+}
+function recuar(){ if(selecionada > 1){ selecionada--; atualizar(); } }
+document.getElementById("der-prox").addEventListener("click", avancar);
+document.getElementById("der-ant").addEventListener("click", recuar);
+document.getElementById("der-ini").addEventListener("click", () => { visiveis = 1; selecionada = 1; atualizar(); });
+document.getElementById("der-tudo").addEventListener("click", () => { visiveis = D.linhas.length; selecionada = D.linhas.length; atualizar(); });
+derCard.addEventListener("keydown", e => {
+  if(e.key === "ArrowRight" || e.key === "ArrowDown"){ e.preventDefault(); avancar(); }
+  if(e.key === "ArrowLeft" || e.key === "ArrowUp"){ e.preventDefault(); recuar(); }
+});
+
+DERIVACOES.forEach(d => {
+  const b = document.createElement("button");
+  b.className = "chip" + (d.grupo === "falaciosas" ? " fal" : "");
+  b.textContent = d.titulo; b.dataset.id = d.id;
+  b.addEventListener("click", () => escolher(d.id, false));
+  document.getElementById(d.grupo === "falaciosas" ? "der-fal" : "der-cor").appendChild(b);
+});
+document.querySelectorAll(".lnk[data-der]").forEach(b => b.addEventListener("click", () => escolher(b.dataset.der, true)));
+
+escolher("um-mais-um", false);
+})();
+</script>
+</body>
+</html>
