@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A torre de Hanói — Matemática Discreta · IFTM</title>
+<meta name="description" content="Teoria da recursão, parte 2: duas soluções por recorrência para a torre de Hanói, uma sobre o número de discos, em Prolog, e outra sobre o número do movimento, em LISP.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2307090f'/%3E%3Crect x='8' y='50' width='48' height='4' rx='2' fill='%236fb3d2'/%3E%3Crect x='14' y='40' width='36' height='8' rx='3' fill='%23f5a623'/%3E%3Crect x='20' y='30' width='24' height='8' rx='3' fill='%23d2789a'/%3E%3Crect x='26' y='20' width='12' height='8' rx='3' fill='%237fd28e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f; --surface:#0d1119; --surface2:#111725;
+    --rule:#1b2230; --text:#e7eaf0; --muted:#868ea2; --dim:#5f6779;
+    --amber:#f5a623; --amber-dim:#8a5f16; --azul:#6fb3d2; --rosa:#d2789a; --verde:#7fd28e;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif:"IBM Plex Serif", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);
+       font-size:15px;line-height:1.68;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:62rem;margin:0 auto;padding:clamp(2.5rem,8vw,5rem) clamp(1rem,5vw,2.5rem) 4rem;}
+  .eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 1.1rem;}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,5.5vw,2.8rem);line-height:1.1;
+     letter-spacing:-.015em;margin:0;}
+  .lead{color:var(--muted);max-width:43rem;margin:1rem 0 0;}
+  section{margin-top:clamp(2.8rem,7vw,4.2rem);}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.45rem;line-height:1.25;margin:0 0 .25rem;}
+  .kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 .7rem;}
+  .sub{color:var(--muted);max-width:46rem;margin:0 0 1.3rem;font-size:.9rem;}
+  a{color:var(--azul);}
+  a:hover{color:var(--amber);}
+
+  .cartao{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.3rem 1.4rem;}
+  .duas{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(17.5rem,1fr));}
+  .tres{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));}
+  .cartao h3{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:0 0 .55rem;}
+  .cartao p{margin:.45rem 0 0;color:var(--muted);font-size:.86rem;}
+  .cartao p:first-of-type{margin-top:0;}
+  .cartao h3 + p{margin-top:0;}
+  .form{font-family:var(--serif);font-size:1.02rem;color:var(--azul);white-space:nowrap;}
+  .gr{color:var(--amber);}
+  b.t{color:var(--text);font-weight:500;}
+
+  ul.limpa{list-style:none;margin:.2rem 0 0;padding:0;}
+  ul.limpa li{padding:.5rem 0;border-top:1px solid var(--rule);font-size:.84rem;color:var(--muted);}
+  ul.limpa li:first-child{border-top:0;padding-top:.1rem;}
+  ul.limpa li .form{display:inline-block;min-width:4.2rem;}
+  ul.limpa li b{color:var(--text);font-weight:500;}
+  ol.rec{margin:.3rem 0 0;padding-left:1.25rem;color:var(--muted);font-size:.85rem;}
+  ol.rec li{margin:.3rem 0;}
+  ol.rec b{color:var(--text);font-weight:500;}
+
+  .nota{margin-top:1rem;padding:.85rem 1rem;border-left:2px solid var(--amber);background:var(--surface);
+        font-size:.83rem;color:var(--muted);border-radius:0 8px 8px 0;}
+  .nota b{color:var(--amber);font-weight:500;}
+  .nota.azul{border-left-color:var(--azul);} .nota.azul b{color:var(--azul);}
+
+  table{width:100%;border-collapse:collapse;font-size:.84rem;}
+  th,td{text-align:left;padding:.5rem .65rem;border-bottom:1px solid var(--rule);vertical-align:top;}
+  th{font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:400;}
+  tr:last-child td{border-bottom:0;}
+  .tabela{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow-x:auto;}
+  td.fo{font-family:var(--serif);font-size:.98rem;color:var(--azul);white-space:nowrap;}
+  td.le{color:var(--muted);}
+  td.ab{color:var(--amber);white-space:nowrap;}
+
+  input[type=text], input[type=number]{font-family:var(--mono);font-size:1rem;padding:.6rem .8rem;
+    background:var(--surface2);color:var(--text);border:1px solid var(--rule);border-radius:8px;}
+  input[type=text]{width:100%;}
+  input:focus{outline:none;border-color:var(--amber);}
+  button{font-family:var(--mono);font-size:.84rem;padding:.55rem .95rem;background:var(--surface2);
+    color:var(--text);border:1px solid var(--rule);border-radius:8px;cursor:pointer;
+    transition:border-color .16s,color .16s;white-space:nowrap;}
+  button:hover,button:focus-visible{border-color:var(--amber);color:var(--amber);outline:none;}
+  button.primario{border-color:var(--amber-dim);color:var(--amber);}
+  button[disabled]{opacity:.35;cursor:default;border-color:var(--rule);color:var(--text);}
+  .linha{display:flex;gap:.5rem;align-items:center;}
+  .linha input{flex:1;min-width:0;}
+  .chips{display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;margin-top:.8rem;}
+  .chips .rot{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-right:.3rem;}
+  .chip{font-size:.8rem;padding:.2rem .65rem;border-radius:20px;background:none;}
+  .chip.sel{border-color:var(--amber);color:var(--amber);}
+  .rot{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.35rem;}
+  .erro{color:var(--rosa);font-size:.88rem;}
+
+  .proxima{display:block;margin-top:clamp(2.8rem,7vw,4rem);text-decoration:none;background:var(--surface);
+    border:1px solid var(--amber-dim);border-radius:12px;padding:1.4rem 1.5rem;color:var(--text);
+    transition:border-color .16s;}
+  .proxima:hover,.proxima:focus-visible{border-color:var(--amber);color:var(--text);outline:none;}
+  .proxima .rot{color:var(--amber);}
+  .proxima strong{display:block;font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:.1rem 0 .35rem;}
+  .proxima span.d{color:var(--muted);font-size:.86rem;}
+  .proxima .seta{float:right;color:var(--amber);font-size:1.4rem;line-height:1;transition:transform .16s;}
+  .proxima:hover .seta{transform:translateX(4px);}
+
+  footer{margin:3rem 0 0;padding:1.4rem 0 0;border-top:1px solid var(--rule);font-size:.76rem;line-height:1.8;color:var(--muted);}
+  footer a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--rule);transition:color .16s,border-color .16s;}
+  footer a:hover,footer a:focus-visible{color:var(--amber);border-color:var(--amber);outline:none;}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important;}}
+
+  pre.codigo{font-family:var(--mono);font-size:.84rem;line-height:1.75;background:var(--surface2);color:var(--text);
+             border:1px solid var(--rule);border-radius:8px;padding:.85rem 1rem;margin:.6rem 0 0;overflow-x:auto;white-space:pre;}
+  pre.codigo .c{color:var(--dim);}
+  pre.codigo .kw{color:var(--rosa);}
+  .rotulo-cod{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:block;margin:.9rem 0 0;}
+  .esquema{font-family:var(--serif);font-size:1.12rem;color:var(--azul);line-height:1.9;margin:.5rem 0 0;overflow-x:auto;white-space:nowrap;}
+  .esquema .k{color:var(--amber);}
+  .lab{margin-top:1rem;}
+  .lab .controles{display:flex;flex-wrap:wrap;gap:.8rem 1.2rem;align-items:center;margin-top:.9rem;}
+  .lab label{font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:.45rem;}
+  .lab input[type=number]{width:5.2rem;padding:.4rem .55rem;font-size:.95rem;}
+  .lab input[type=range]{accent-color:var(--amber);}
+  .painel{background:var(--surface2);border:1px solid var(--rule);border-radius:10px;padding:1rem 1.1rem;margin-top:1rem;min-width:0;}
+  .grande{font-family:var(--serif);font-size:2rem;line-height:1.15;color:var(--text);margin:.1rem 0 .3rem;overflow-wrap:anywhere;}
+  .grande small{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:.5rem;}
+  .estado{font-size:.84rem;color:var(--muted);margin:.5rem 0 0;}
+  .estado b{font-weight:500;}
+  .ok{color:var(--verde);} .mal{color:var(--rosa);} .am{color:var(--amber);}
+  .rolagem{max-height:19rem;overflow-y:auto;margin-top:.6rem;border-top:1px solid var(--rule);}
+  .rolagem table td{padding:.3rem .55rem;font-size:.82rem;}
+  .rolagem table td.fo{font-size:.92rem;}
+  .rolagem tr.destaque td{background:rgba(245,166,35,.08);}
+  .par{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));margin-top:1rem;}
+  .par > div{min-width:0;}
+  [data-c]{border-radius:3px;transition:background-color .15s,color .15s;cursor:default;}
+  [data-c].lit{background:rgba(245,166,35,.18);color:var(--text);}
+  .dica-par{font-size:.74rem;color:var(--muted);margin:.6rem 0 0;}
+
+  svg.torre{width:100%;height:auto;display:block;touch-action:manipulation;}
+  .haste rect.alvo{fill:transparent;cursor:pointer;}
+  .haste:hover rect.base-h{fill:#2a3446;}
+  .haste.sel rect.base-h{fill:var(--amber-dim);}
+  .disco{transition:transform .25s ease;}
+  .disco.ergue{transform:translateY(-14px);}
+  .placar{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;align-items:baseline;font-size:.84rem;color:var(--muted);margin-top:.4rem;}
+  .placar b{font-family:var(--serif);font-size:1.25rem;color:var(--text);font-weight:600;}
+  .triplas{font-family:var(--serif);font-size:.98rem;color:var(--azul);line-height:1.8;margin-top:.6rem;min-height:1.8em;overflow-wrap:anywhere;}
+  .triplas span.ult{color:var(--amber);}
+  .nivel{font-family:var(--serif);font-size:1rem;line-height:1.9;padding:.55rem 0;border-top:1px solid var(--rule);overflow-wrap:anywhere;}
+  .nivel:first-child{border-top:0;}
+  .nivel .ch{color:var(--rosa);}
+  .nivel .mv{color:var(--amber);}
+  .nivel .vz{color:var(--dim);}
+  .nivel .u{color:var(--muted);padding:0 .25rem;}
+  .nivel .rotn{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;}
+  .regua{display:flex;align-items:flex-end;gap:2px;height:110px;margin-top:.8rem;}
+  .regua div{flex:1;min-width:2px;background:var(--azul);opacity:.55;border-radius:2px 2px 0 0;cursor:pointer;transition:opacity .12s;}
+  .regua div:hover{opacity:1;}
+  .regua div.sel{background:var(--amber);opacity:1;}
+  .ciclos{display:flex;flex-wrap:wrap;gap:1.4rem;margin-top:.6rem;}
+  .ciclo{font-family:var(--serif);font-size:1.15rem;color:var(--azul);}
+  .ciclo small{display:block;font-family:var(--mono);font-size:.7rem;color:var(--muted);}
+  .esquema{background:rgba(111,179,210,.07);border-left:3px solid var(--azul);border-radius:0 8px 8px 0;padding:.55rem .95rem;color:#aab6cb;}
+  .cartao p.esquema, .cartao .esquema{font-size:1.14rem;line-height:1.85;}
+  .esquema + .esquema{margin-top:.5rem;}
+  .m{font-family:var(--serif);font-size:1.12em;color:#aab6cb;background:rgba(111,179,210,.08);padding:0 .28em;border-radius:4px;white-space:nowrap;}
+  .qf, .sx{color:#8fcbea;font-style:normal;}
+  .qv{color:var(--text);font-style:italic;}
+  .qn{color:var(--verde);}
+  .qp{color:var(--muted);font-size:.9em;}
+  .sx sub{font-size:.68em;}
+  [data-c].lit .qv,[data-c].lit .qf{color:#fff;}
+  .replay .legenda{display:flex;flex-wrap:wrap;gap:.4rem 1.2rem;font-size:.78rem;color:var(--muted);margin-top:.3rem;}
+  .replay .legenda i{display:inline-block;width:.9rem;height:.6rem;border-radius:3px;margin-right:.35rem;vertical-align:middle;}
+  .dica{font-size:.86rem;color:var(--muted);line-height:1.75;margin-top:.7rem;padding:.7rem .9rem;border:1px dashed var(--rule);border-radius:8px;}
+  .dica b{color:var(--text);font-weight:500;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">IFTM · Matemática Discreta · Teoria da recursão, 2 de 2</p>
+  <h1>A torre de Hanói</h1>
+  <p class="lead">Três hastes, n discos de tamanhos diferentes, todos empilhados na primeira. O objetivo é levá-los para a terceira, movendo um disco por vez e sem nunca pôr um disco sobre outro menor. Esta página mostra duas soluções por recorrência e, para cada uma, um programa que é quase a própria definição.</p>
+</header>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">O quebra-cabeça</p>
+  <h2>Jogue antes de definir</h2>
+  <p class="sub">Clique numa haste para pegar o disco do topo e em outra para soltá-lo. Cada movimento é anotado como uma tripla: número do movimento, haste de origem, haste de destino.</p>
+
+  <div class="cartao">
+    <div class="controles" style="display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center">
+      <label style="font-size:.8rem;color:var(--muted);display:flex;gap:.45rem;align-items:center">discos
+        <input type="number" id="jg-n" min="1" max="7" value="3" style="width:4.2rem;padding:.4rem .55rem"></label>
+      <button id="jg-reini">recomeçar</button>
+      <button class="primario" id="jg-resolver">mostrar a solução</button>
+      <label style="font-size:.8rem;color:var(--muted);display:flex;gap:.45rem;align-items:center">velocidade
+        <input type="range" id="jg-vel" min="1" max="10" value="5" style="accent-color:var(--amber)"></label>
+    </div>
+    <svg class="torre" id="jg-svg" viewBox="0 0 600 210" aria-label="torre de Hanói"></svg>
+    <div class="placar">
+      <span>movimentos <b id="jg-mov">0</b></span>
+      <span>mínimo <b id="jg-min">7</b></span>
+      <span id="jg-msg"></span>
+    </div>
+    <div class="triplas" id="jg-triplas"></div>
+  </div>
+  <div class="nota azul"><b>Por que 2ⁿ − 1?</b> Para mover o maior disco, todos os outros precisam estar empilhados na haste auxiliar. Levá-los até lá custa o mesmo que resolver o problema com n − 1 discos; trazê-los de volta para cima do maior custa isso de novo. Então <span class="m">T(n) = 2·T(n − 1) + 1</span>, com <span class="m">T(0) = 0</span> — e isso dá <span class="m">2ⁿ − 1</span>. Uma recorrência já aparece antes de qualquer programa.</div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Representação</p>
+  <h2>A solução é um conjunto de triplas</h2>
+  <p class="sub">Com as hastes A, B e C, e os discos começando em A, a solução para três discos é:</p>
+  <div class="cartao">
+    <p class="esquema">M(A, B, C, 3, 0) = { ⟨1, A, C⟩, ⟨2, A, B⟩, ⟨3, C, B⟩, ⟨4, A, C⟩, ⟨5, B, A⟩, ⟨6, B, C⟩, ⟨7, A, C⟩ }</p>
+    <p>Como cada tripla traz o seu número, a ordem em que se escrevem os elementos não importa: o conjunto já diz qual movimento vem antes. As duas propostas a seguir constroem esse mesmo conjunto por caminhos diferentes. A primeira faz recorrência sobre o <b class="t">número de discos</b>; a segunda, sobre o <b class="t">número do movimento</b>.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Primeira proposta</p>
+  <h2>Recorrência sobre n</h2>
+  <p class="sub">Sejam <span class="m">o, a, d ∈ {A, B, C}</span>, distintas entre si — origem, auxiliar e destino —, e <span class="m">k ∈ ℕ</span>, o número de movimentos já feitos antes desta etapa.</p>
+
+  <div class="cartao">
+    <div class="par">
+      <div>
+        <span class="rotulo-cod">definição</span>
+        <p class="esquema"><span data-c="base">M(o, a, d, 0, k) = { }</span></p>
+        <p class="esquema">M(o, a, d, n, k) = <span data-c="gd">(se n &gt; 0)</span><br>
+          &nbsp;&nbsp;<span data-c="r1">M(o, d, a, <span data-c="n1">n − 1</span>, k)</span><br>
+          &nbsp;&nbsp;<span data-c="un">∪</span> { ⟨<span data-c="k2">k + 2<sup>n−1</sup></span>, o, d⟩ }<br>
+          &nbsp;&nbsp;<span data-c="un">∪</span> <span data-c="r2">M(a, o, d, n − 1, k + 2<sup>n−1</sup>)</span></p>
+      </div>
+      <div>
+        <span class="rotulo-cod">Prolog (o arquivo Hanoi.pl)</span>
+<pre class="codigo"><span data-c="base">m(O,A,D,0,K,[]).</span>
+
+m(O,A,D,N,K,R) :-
+    <span data-c="gd">N &gt; 0</span>,
+    <span data-c="n1">N1 is N-1</span>,
+    <span data-c="r1">m(O,D,A,N1,K,R1)</span>,
+    <span data-c="k2">K2 is K+2^N1</span>,
+    <span data-c="r2">m(A,O,D,N1,K2,R2)</span>,
+    <span data-c="un">append(R1,[[K2,O,D]],R3)</span>,
+    <span data-c="un">append(R3,R2,R)</span>.</pre>
+      </div>
+    </div>
+    <p class="dica-par">Passe o cursor sobre as partes para ver a correspondência.</p>
+    <p style="margin-top:.8rem">Lida em português: para mover n discos de o para d, mova os n − 1 de cima para a auxiliar, usando d como apoio; mova o maior de o para d — é o movimento de número k + 2<sup>n−1</sup>, porque os anteriores são os 2<sup>n−1</sup> − 1 da primeira etapa; e traga os n − 1 da auxiliar para d, numerando a partir dali. O Prolog não acrescenta nada: o último argumento, R, é o resultado, e as duas chamadas a <span class="form">append</span> fazem a união.</p>
+<pre class="codigo">?- m(a, b, c, 3, 0, R).
+R = [[1, a, c], [2, a, b], [3, c, b], [4, a, c], [5, b, a], [6, b, c], [7, a, c]]</pre>
+    <p style="margin-top:.6rem">Na consulta, as hastes vão em minúsculas: em Prolog, nome com maiúscula é variável.</p>
+  </div>
+
+  <div class="cartao lab">
+    <h3>Desdobrar a definição</h3>
+    <p>Cada clique substitui todas as chamadas de M pela sua definição. Em <span style="color:var(--rosa)">rosa</span>, chamadas ainda por resolver; em <span style="color:var(--amber)">âmbar</span>, movimentos já determinados.</p>
+    <div class="controles">
+      <label>discos <input type="number" id="dd-n" min="1" max="4" value="3"></label>
+      <button class="primario" id="dd-ir">desdobrar um nível</button>
+      <button id="dd-reini">recomeçar</button>
+    </div>
+    <div class="painel" id="dd-niveis"></div>
+  </div>
+
+  <div class="cartao lab replay" id="rp1"></div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Segunda proposta</p>
+  <h2>Recorrência sobre k</h2>
+  <p class="sub">Agora as hastes se chamam o, a e d — origem, auxiliar, destino; na notação anterior, A, B e C. A pergunta muda: em vez de “como resolver n discos?”, pergunta-se “qual é o movimento de número k?”.</p>
+
+  <div class="duas">
+    <div class="cartao">
+      <h3>Qual disco se move: d(k, n)</h3>
+      <p class="esquema">d(k, n) = n + 1, se k = 2ⁿ<br>d(k, n) = d(k − 2ⁿ, n − 1), se k &gt; 2ⁿ<br>d(k, n) = d(k, n − 1), se k &lt; 2ⁿ</p>
+      <p><span class="m">d(k, n)</span> é o disco movido no passo <span class="m">k</span>, contando o menor como 1. A recursão vai tirando de k as potências de 2: o resultado é a posição do último 1 na escrita binária de k. O disco 1 se move nos passos ímpares, o disco 2 nos passos 2, 6, 10…, e o disco j a cada 2<sup>j</sup> passos.</p>
+      <div class="regua" id="regua" aria-label="sequência d(k)"></div>
+      <p class="estado" id="regua-info">Clique numa barra.</p>
+    </div>
+    <div class="cartao">
+      <h3>Para onde ele vai: <span class="sx">s<sub>oda</sub></span> e <span class="sx">s<sub>oad</sub></span></h3>
+      <p>Cada disco percorre as hastes sempre no mesmo sentido. Há dois sentidos possíveis:</p>
+      <div class="ciclos">
+        <div class="ciclo">o → d → a → o<small><span class="sx">s<sub>oda</sub></span></small></div>
+        <div class="ciclo">o → a → d → o<small><span class="sx">s<sub>oad</sub></span></small></div>
+      </div>
+      <p style="margin-top:.8rem">Os discos com a mesma paridade de <span class="m">n</span> seguem <span class="sx">s<sub>oda</sub></span>; os outros, <span class="sx">s<sub>oad</sub></span>. Com n = 3, os discos 1 e 3 vão de o direto para d; o disco 2 vai primeiro para a.</p>
+      <p>Daí <span class="m">f(k, n)</span>: a origem <span class="m">b</span> do movimento <span class="m">k</span> é onde o disco <span class="m">d(k, n)</span> parou da última vez — o destino do seu movimento anterior, que foi o de número <span class="m">k − 2<sup>d(k,n)</sup></span>. Se não houve movimento anterior, <span class="m">b = o</span>. O destino é o próximo no ciclo.</p>
+    </div>
+  </div>
+
+  <div class="cartao lab replay" id="rp2"></div>
+
+  <div class="cartao lab">
+    <h3>Calcular o movimento k diretamente</h3>
+    <p>Escolha n e k. A página segue a definição de f: volta pelos movimentos anteriores do mesmo disco até o primeiro, e então sobe de novo, aplicando o ciclo.</p>
+    <div class="controles">
+      <label>discos n <input type="number" id="mk-n" min="1" max="12" value="5"></label>
+      <label>movimento k <input type="number" id="mk-k" min="1" value="20"></label>
+    </div>
+    <div class="painel">
+      <div class="grande" id="mk-val"></div>
+      <p class="estado" id="mk-est"></p>
+      <div class="rolagem"><table id="mk-cadeia"></table></div>
+    </div>
+  </div>
+
+  <div class="cartao" style="margin-top:1rem">
+    <h3>Definição e código</h3>
+    <div class="par" style="grid-template-columns:1fr">
+      <div>
+        <span class="rotulo-cod">definição</span>
+        <p class="esquema"><span data-c="h">solução = M(2ⁿ − 1)</span></p>
+        <p class="esquema"><span data-c="m0">M(0) = { }</span><br>
+          <span data-c="mk">M(k) = M(k − 1) ∪ { ⟨k, f(k, n)⟩ }</span></p>
+        <p class="esquema"><span data-c="f0">f(k, n) = ⟨⊥, o⟩, se k &lt; 1</span><br>
+          <span data-c="fk">f(k, n) = ⟨b, s(b, k, n)⟩, se k ≥ 1</span>,<br>
+          &nbsp;&nbsp;com <span data-c="b">b = y tal que f(k − 2<sup>d(k,n)</sup>, n) = ⟨x, y⟩</span></p>
+        <p class="esquema"><span data-c="s">s(b, k, n) = <span class="sx">s<sub>oda</sub></span>(b), se d(k, n) ≡ n (mod 2)</span><br>
+          <span data-c="s2">s(b, k, n) = <span class="sx">s<sub>oad</sub></span>(b), caso contrário</span></p>
+      </div>
+      <div>
+        <span class="rotulo-cod">LISP (Hanoi.lsp, versão corrigida)</span>
+<pre class="codigo">(<span class="kw">defun</span> hanoi (n)
+  <span data-c="h">(M (- (expt 2 n) 1) n)</span>)
+
+(<span class="kw">defun</span> M (k n)
+  (cond <span data-c="m0">((= k 0) nil)</span>
+        <span data-c="mk">(t (append (M (- k 1) n)
+                   (list (cons k (f k n)))))</span>))
+
+(<span class="kw">defun</span> f (k n)
+  (cond <span data-c="f0">((&lt; k 1) '(nil o))</span>
+        <span data-c="fk">(t (<span class="kw">let</span></span> <span data-c="b">((b (cadr
+                      (f (- k (expt 2 (d k n))) n))))</span>
+             <span data-c="fk">(list b (s b k n))))</span>))
+
+(<span class="kw">defun</span> s (b k n)
+  (cond (<span data-c="s">(= (mod (d k n) 2) (mod n 2)) (S_oda b)</span>)
+        (<span data-c="s2">t (S_oad b)</span>)))</pre>
+      </div>
+    </div>
+    <p class="dica-par">Passe o cursor sobre as partes para ver a correspondência.</p>
+<pre class="codigo">&gt; (hanoi 3)
+((1 O D) (2 O A) (3 D A) (4 O D) (5 A O) (6 A D) (7 O D))</pre>
+    <p style="margin-top:.6rem">É a mesma sequência da primeira proposta, com o = A, a = B e d = C. Repare em <span class="form">cadr</span>: devolve o segundo elemento de uma lista. É a projeção P<sub>2</sub><sup>2</sup> da <a href="recursao_funcoes.html">página anterior</a>, que na definição aparece como “y tal que … = ⟨x, y⟩”.</p>
+  </div>
+
+  <div class="nota azul"><b>M é um for.</b> A segunda equação de M diz que <span class="m">M(k)</span> se obtém de <span class="m">M(k − 1)</span> acrescentando uma tripla. É, ao pé da letra, o esquema de recursão primitiva da página anterior: <span class="m">h(S(y)) = g(y, h(y))</span>. Em programa, um laço de 1 a 2ⁿ − 1, com número de voltas conhecido antes de começar.</div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Comparação</p>
+  <h2>Duas recorrências, duas formas</h2>
+  <div class="duas">
+    <div class="cartao">
+      <h3>Sobre n: uma árvore</h3>
+      <p>Cada chamada faz duas chamadas com n − 1. O desdobramento é uma árvore de altura n, e cada nó produz um movimento. Para saber qual é o movimento 20, é preciso montar a solução até ele.</p>
+      <p>É a recursão de quem divide o problema em partes do mesmo tipo: resolva o menor, e o maior vem junto.</p>
+    </div>
+    <div class="cartao">
+      <h3>Sobre k: uma linha</h3>
+      <p>M percorre k de 1 até 2ⁿ − 1, um passo por vez, como um for. E cada movimento se calcula sozinho, voltando só pelos movimentos anteriores do mesmo disco — para o movimento 20, os de número 4 e 12.</p>
+      <p>É a recursão de quem encontrou uma regularidade: a sequência d(k) e os dois ciclos dizem tudo o que é preciso.</p>
+    </div>
+  </div>
+  <div class="nota"><b>As duas são recursivas primitivas.</b> Nenhuma precisa de while: em ambas, a quantidade de trabalho fica limitada antes de começar — n diminui a cada chamada numa, k diminui na outra. A diferença não está no poder de cálculo, e sim no que cada definição deixa ver do problema.</div>
+</section>
+
+<footer>
+  <a href="recursao_funcoes.html">← Funções recursivas</a> · <a href="../index.html">← Matemática Discreta</a> · Prof. André Lemos · IFTM Campus Uberlândia Centro
+</footer>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const fmt = x => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+/* correspondência */
+document.body.addEventListener("mouseover", e => {
+  const el = e.target.closest("[data-c]"); if(!el) return;
+  el.closest(".cartao").querySelectorAll('[data-c="' + el.dataset.c + '"]').forEach(x => x.classList.add("lit"));
+});
+document.body.addEventListener("mouseout", e => {
+  const el = e.target.closest("[data-c]"); if(!el) return;
+  el.closest(".cartao").querySelectorAll(".lit").forEach(x => x.classList.remove("lit"));
+});
+
+/* ---------- as duas soluções, transcritas ---------- */
+function mProlog(O, A, D, N, K){
+  if(N === 0) return [];
+  const N1 = N - 1, R1 = mProlog(O, D, A, N1, K), K2 = K + 2 ** N1, R2 = mProlog(A, O, D, N1, K2);
+  return R1.concat([[K2, O, D]], R2);
+}
+const dd = (k, n) => k === 2 ** n ? n + 1 : (k > 2 ** n ? dd(k - 2 ** n, n - 1) : dd(k, n - 1));
+const SODA = {o: "d", d: "a", a: "o"}, SOAD = {o: "a", a: "d", d: "o"};
+const sLisp = (b, k, n) => (dd(k, n) % 2) === (n % 2) ? SODA[b] : SOAD[b];
+function fLisp(k, n){ if(k < 1) return [null, "o"]; const b = fLisp(k - 2 ** dd(k, n), n)[1]; return [b, sLisp(b, k, n)]; }
+const NOME = {o: "A", a: "B", d: "C"};
+
+/* ================= realce da matemática ================= */
+function realcar(raiz){
+  const alvos = [];
+  const w = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT, {
+    acceptNode: n => n.parentElement.closest(".sx, .qf, .qv, .qn, .qp, pre, .ok, .mal") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+  });
+  while(w.nextNode()) alvos.push(w.currentNode);
+  alvos.forEach(no => {
+    const t = no.nodeValue, re = /([A-Za-zμÀ-ÿ]+)([₀-₉ᵢⱼₖₘₙ]*)|(\d+)/g;
+    let m, ult = 0, frag = document.createDocumentFragment(), mudou = false;
+    while((m = re.exec(t))){
+      frag.appendChild(document.createTextNode(t.slice(ult, m.index)));
+      let cls;
+      if(m[3]) cls = "qn";
+      else {
+        const prox = t[m.index + m[0].length];
+        if(prox === "(") cls = "qf";
+        else if(m[1].length === 1 && m[1] !== "e" && m[1] !== "é") cls = "qv";
+        else cls = "qp";
+      }
+      const sp = document.createElement("span"); sp.className = cls; sp.textContent = m[0];
+      frag.appendChild(sp); ult = m.index + m[0].length; mudou = true;
+    }
+    if(!mudou) return;
+    frag.appendChild(document.createTextNode(t.slice(ult)));
+    no.parentNode.replaceChild(frag, no);
+  });
+}
+
+/* ================= desenho comum das torres ================= */
+const HX = [110, 300, 490], BASE = 185;
+function desenharTorre(svg, hastes, n, cor, opc = {}){
+  const w = d => 30 + d * (140 / n);
+  let s = '<rect x="20" y="' + BASE + '" width="560" height="8" rx="3" fill="#1b2230"/>';
+  hastes.forEach((h, i) => {
+    s += '<g class="haste' + (opc.sel === i ? " sel" : "") + '" data-h="' + i + '">' +
+         '<rect class="base-h" x="' + (HX[i] - 4) + '" y="30" width="8" height="' + (BASE - 30) + '" rx="3" fill="#1b2230"/>' +
+         '<text x="' + HX[i] + '" y="22" text-anchor="middle" fill="#868ea2" font-family="IBM Plex Mono, monospace" font-size="12">' + "ABC"[i] + " · " + ["origem", "auxiliar", "destino"][i] + '</text>';
+    h.forEach((d, j) => {
+      const W = w(d), topo = j === h.length - 1 && opc.sel === i, y = BASE - 18 * (j + 1);
+      s += '<rect class="disco' + (topo ? " ergue" : "") + '" x="' + (HX[i] - W / 2) + '" y="' + y + '" width="' + W + '" height="15" rx="6" fill="' + cor(d, i, j) + '"/>';
+      if(opc.rotulos) s += '<text x="' + HX[i] + '" y="' + (y + 11.5) + '" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="#07090f">' + d + "</text>";
+    });
+    if(opc.alvo) s += '<rect class="alvo" x="' + (HX[i] - 92) + '" y="10" width="184" height="190"/>';
+    s += "</g>";
+  });
+  svg.innerHTML = s;
+}
+
+/* ================= reproduções da solução ================= */
+const AMARELO = "#f5c542", VERMELHO = "#e5534b", CINZA = "#3a4254", AZUL = "#5aa9e6";
+function criarReplay(raiz, modo){
+  const lg = c => '<i style="background:' + c + '"></i>';
+  raiz.innerHTML =
+    '<div class="controles">' +
+      '<label>discos <input type="number" min="1" max="7" value="' + (modo === 1 ? 4 : 5) + '" data-r="n"></label>' +
+      '<button class="primario" data-r="play">reproduzir</button>' +
+      '<button data-r="passo">um passo</button>' +
+      '<button data-r="reini">recomeçar</button>' +
+      '<label>velocidade <input type="range" min="1" max="10" value="4" data-r="vel"></label>' +
+    "</div>" +
+    '<svg class="torre" viewBox="0 0 600 210" aria-label="reprodução da solução"></svg>' +
+    '<div class="legenda">' + (modo === 1
+      ? "<span>" + lg(AMARELO) + "próximo disco a mover</span><span>" + lg(VERMELHO) + "discos logo abaixo dele, em sequência</span><span>" + lg(CINZA) + "demais</span>"
+      : "<span>" + lg(AMARELO) + "próximo disco a mover</span><span>" + lg(AZUL) + "mesma paridade de n: " + '<span class="sx">s<sub>oda</sub></span>' + "</span><span>" + lg(VERMELHO) + "paridade oposta: " + '<span class="sx">s<sub>oad</sub></span>' + "</span>") +
+    "</div>" +
+    '<div class="placar"><span>movimento <b data-r="k">0</b> de <b data-r="tot">0</b></span><span data-r="ult"></span></div>' +
+    (modo === 2 ? '<div class="dica" data-r="dica"></div>' : "");
+  const q = r => raiz.querySelector('[data-r="' + r + '"]'), svg = raiz.querySelector("svg");
+  let n, hastes, sol, k, timer = null;
+  function reini(){
+    parar();
+    n = Math.min(7, Math.max(1, parseInt(q("n").value, 10) || 4)); q("n").value = n;
+    hastes = [[], [], []]; for(let i = n; i >= 1; i--) hastes[0].push(i);
+    sol = mProlog("A", "B", "C", n, 0); k = 0;
+    q("tot").textContent = sol.length;
+    mostrar();
+  }
+  function mostrar(){
+    const prox = sol[k], cor = {};
+    if(prox){
+      const pi = "ABC".indexOf(prox[1]), pilha = hastes[pi], j = pilha[pilha.length - 1];
+      cor[j] = AMARELO;
+      if(modo === 1){ let esp = j + 1; for(let t = pilha.length - 2; t >= 0 && pilha[t] === esp; t--, esp++) cor[esp] = VERMELHO; }
+    }
+    const fcor = d => cor[d] || (modo === 1 ? CINZA : (d % 2 === n % 2 ? AZUL : VERMELHO));
+    desenharTorre(svg, hastes, n, fcor, {rotulos: true});
+    q("k").textContent = k;
+    q("ult").innerHTML = k ? "último: ⟨" + sol[k - 1].join(", ") + "⟩" : "";
+    q("passo").disabled = !prox;
+    if(modo === 2) q("dica").innerHTML = prox ? dica(k + 1) : '<b class="ok">Resolvido.</b> Foram ' + sol.length + " movimentos.";
+  }
+  function dica(K){
+    const d = dd(K, n), p = 2 ** d, vezes = Math.floor(K / p);
+    const ciclo = d % 2 === n % 2 ? ["o", "d", "a"] : ["o", "a", "d"];
+    const nomeC = d % 2 === n % 2 ? '<span class="sx">s<sub>oda</sub></span>: o → d → a' : '<span class="sx">s<sub>oad</sub></span>: o → a → d';
+    const de = ciclo[vezes % 3], para = ciclo[(vezes + 1) % 3];
+    return "<b>Próximo: movimento " + K + "</b>, em binário " + K.toString(2) + ". " +
+      "O último 1, contando da direita a partir de 1, está na posição " + d + ": move-se o <b>disco " + d + "</b>, que segue " + nomeC + ". " +
+      "Antes deste, ele já se moveu ⌊" + K + " / 2<sup>" + d + "</sup>⌋ = " + vezes + (vezes === 1 ? " vez" : " vezes") +
+      "; como o ciclo tem três hastes, conta-se " + vezes + " mod 3 = " + (vezes % 3) + " casa" + (vezes % 3 === 1 ? "" : "s") + " a partir de o. " +
+      "Está em <b>" + de + " (" + NOME[de] + ")</b> e vai para <b>" + para + " (" + NOME[para] + ")</b>.";
+  }
+  function passo(){
+    const m = sol[k]; if(!m) return false;
+    const de = "ABC".indexOf(m[1]), para = "ABC".indexOf(m[2]);
+    hastes[para].push(hastes[de].pop()); k++; mostrar(); return true;
+  }
+  function parar(){ if(timer){ clearTimeout(timer); timer = null; } q("play").textContent = "reproduzir"; }
+  function rodar(){ if(!passo()){ parar(); return; } timer = setTimeout(rodar, 2600 / +q("vel").value); }
+  q("play").onclick = () => {
+    if(timer){ parar(); return; }
+    if(k >= sol.length) reini();
+    q("play").textContent = "pausar";
+    timer = setTimeout(rodar, 200);
+  };
+  q("passo").onclick = () => { parar(); passo(); };
+  q("reini").onclick = reini;
+  q("n").addEventListener("change", reini);
+  reini();
+}
+
+/* ================= o jogo ================= */
+const CORES = ["#f5a623", "#d2789a", "#6fb3d2", "#7fd28e", "#c99bf0", "#e8835a", "#b9c0cf"];
+let N = 3, hastes, movs, sel = null, anima = null;
+function reiniciar(){
+  pararAnim();
+  N = Math.min(7, Math.max(1, parseInt($("jg-n").value, 10) || 3));
+  $("jg-n").value = N;
+  hastes = [[], [], []];
+  for(let i = N; i >= 1; i--) hastes[0].push(i);
+  movs = []; sel = null;
+  $("jg-min").textContent = 2 ** N - 1;
+  $("jg-msg").textContent = "";
+  desenhar();
+}
+function desenhar(){
+  desenharTorre($("jg-svg"), hastes, N, d => CORES[(d - 1) % CORES.length], {sel: sel, alvo: true});
+  $("jg-mov").textContent = movs.length;
+  $("jg-triplas").innerHTML = movs.map((m, i) => '<span' + (i === movs.length - 1 ? ' class="ult"' : "") + ">⟨" + m.join(", ") + "⟩</span>").join(" ");
+}
+function mover(de, para){
+  const d = hastes[de][hastes[de].length - 1];
+  hastes[para].push(hastes[de].pop());
+  movs.push([movs.length + 1, "ABC"[de], "ABC"[para]]);
+  return d;
+}
+function terminou(){
+  if(hastes[2].length !== N) return;
+  const min = 2 ** N - 1;
+  $("jg-msg").innerHTML = movs.length === min
+    ? '<span class="ok">Resolvido com o mínimo de movimentos.</span>'
+    : '<span class="am">Resolvido, com ' + (movs.length - min) + " movimento" + (movs.length - min === 1 ? "" : "s") + " a mais que o mínimo.</span>";
+}
+$("jg-svg").addEventListener("click", e => {
+  if(anima) return;
+  const g = e.target.closest(".haste"); if(!g) return;
+  const i = +g.dataset.h;
+  if(sel === null){ if(hastes[i].length) sel = i; }
+  else if(sel === i) sel = null;
+  else {
+    const topo = hastes[sel][hastes[sel].length - 1], alvo = hastes[i][hastes[i].length - 1];
+    if(alvo !== undefined && alvo < topo){
+      $("jg-msg").innerHTML = '<span class="mal">Não se põe um disco sobre outro menor.</span>';
+    } else { mover(sel, i); $("jg-msg").textContent = ""; terminou(); }
+    sel = null;
+  }
+  desenhar();
+});
+function pararAnim(){ if(anima){ clearTimeout(anima); anima = null; } $("jg-resolver").textContent = "mostrar a solução"; }
+$("jg-reini").onclick = reiniciar;
+$("jg-n").addEventListener("change", reiniciar);
+$("jg-resolver").onclick = () => {
+  if(anima){ pararAnim(); return; }
+  reiniciar();
+  const sol = mProlog("A", "B", "C", N, 0);
+  let i = 0;
+  $("jg-resolver").textContent = "parar";
+  const passo = () => {
+    if(i >= sol.length){ pararAnim(); terminou(); desenhar(); return; }
+    const [, o, d] = sol[i++];
+    mover("ABC".indexOf(o), "ABC".indexOf(d));
+    desenhar();
+    anima = setTimeout(passo, 1100 / +$("jg-vel").value);
+  };
+  anima = setTimeout(passo, 300);
+};
+reiniciar();
+
+/* ================= desdobramento ================= */
+let niveis = [];
+function termo(x){
+  if(x.t === "M") return '<span class="ch">M(' + [x.o, x.a, x.d, x.n, x.k].join(", ") + ")</span>";
+  if(x.t === "mv") return '<span class="mv">{⟨' + x.k + ", " + x.o + ", " + x.d + "⟩}</span>";
+  return '<span class="vz">{ }</span>';
+}
+function ddMostrar(){
+  $("dd-niveis").innerHTML = niveis.map((lv, i) =>
+    '<div class="nivel"><span class="rotn">' + (i === 0 ? "início" : "nível " + i) + "</span>" +
+    lv.map(termo).join('<span class="u">∪</span>') + "</div>").join("");
+  const resta = niveis[niveis.length - 1].some(x => x.t === "M");
+  $("dd-ir").disabled = !resta;
+  if(!resta){
+    const mv = niveis[niveis.length - 1].filter(x => x.t === "mv");
+    $("dd-niveis").innerHTML += '<div class="nivel"><span class="rotn">resultado</span><span class="mv">{ ' +
+      mv.map(x => "⟨" + x.k + ", " + x.o + ", " + x.d + "⟩").join(", ") + " }</span></div>";
+  }
+}
+function ddReini(){
+  const n = Math.min(4, Math.max(1, parseInt($("dd-n").value, 10) || 3));
+  $("dd-n").value = n;
+  niveis = [[{t: "M", o: "A", a: "B", d: "C", n: n, k: 0}]];
+  ddMostrar();
+}
+$("dd-ir").onclick = () => {
+  const novo = [];
+  niveis[niveis.length - 1].forEach(x => {
+    if(x.t !== "M"){ if(x.t === "mv") novo.push(x); return; }
+    if(x.n === 0){ novo.push({t: "vz"}); return; }
+    const k2 = x.k + 2 ** (x.n - 1);
+    novo.push({t: "M", o: x.o, a: x.d, d: x.a, n: x.n - 1, k: x.k},
+              {t: "mv", k: k2, o: x.o, d: x.d},
+              {t: "M", o: x.a, a: x.o, d: x.d, n: x.n - 1, k: k2});
+  });
+  niveis.push(novo);
+  ddMostrar();
+};
+$("dd-reini").onclick = ddReini;
+$("dd-n").addEventListener("change", ddReini);
+ddReini();
+
+/* ================= régua e movimento k ================= */
+function regua(){
+  const n = Math.min(7, Math.max(1, parseInt($("mk-n").value, 10) || 5));
+  const K = 2 ** n - 1, k = +$("mk-k").value;
+  let h = "";
+  for(let i = 1; i <= K; i++) h += '<div data-k="' + i + '" style="height:' + (dd(i, n) / n * 100) + '%"' + (i === k ? ' class="sel"' : "") + ' title="k = ' + i + '"></div>';
+  $("regua").innerHTML = h;
+}
+$("regua").addEventListener("click", e => {
+  const b = e.target.closest("[data-k]"); if(!b) return;
+  $("mk-k").value = b.dataset.k; calcK();
+});
+function calcK(){
+  const n = Math.min(12, Math.max(1, parseInt($("mk-n").value, 10) || 5));
+  $("mk-n").value = n;
+  const K = 2 ** n - 1;
+  let k = Math.min(K, Math.max(1, parseInt($("mk-k").value, 10) || 1));
+  $("mk-k").value = k; $("mk-k").max = K;
+  const disco = dd(k, n), passo = 2 ** disco;
+  const cadeia = []; for(let j = k; j >= 1; j -= passo) cadeia.unshift(j);
+  const sentido = (disco % 2) === (n % 2) ? '<span class="sx">s<sub>oda</sub></span>: o → d → a → o' : '<span class="sx">s<sub>oad</sub></span>: o → a → d → o';
+  let pos = "o", linhas = "";
+  cadeia.forEach(j => {
+    const ant = pos; pos = sLisp(ant, j, n);
+    linhas += '<tr' + (j === k ? ' class="destaque"' : "") + '><td class="le">movimento ' + j + '</td><td class="fo">' + ant + " → " + pos + '</td><td class="le">' + NOME[ant] + " → " + NOME[pos] + "</td></tr>";
+  });
+  const [b, dst] = fLisp(k, n);
+  const ref = mProlog("A", "B", "C", n, 0)[k - 1];
+  const bate = ref[1] === NOME[b] && ref[2] === NOME[dst];
+  $("mk-val").innerHTML = "f(" + k + ", " + n + ") = ⟨" + b + ", " + dst + "⟩";
+  const bin = k.toString(2);
+  $("mk-est").innerHTML = "k = " + k + " em binário é " + bin + ": o último 1 está na posição " + disco + ", então se move o <b class=\"t\">disco " + disco + "</b>, que segue " + sentido + ". " +
+    "Seus movimentos anteriores são os de número " + (cadeia.length > 1 ? cadeia.slice(0, -1).join(", ") : "— nenhum: este é o primeiro") + ". " +
+    (bate ? '<span class="ok">Confere com o movimento ' + k + " da primeira proposta: ⟨" + ref.join(", ") + "⟩.</span>" : '<span class="mal">Não confere.</span>');
+  $("mk-cadeia").innerHTML = linhas;
+  regua();
+  $("regua-info").innerHTML = "Passo k = " + k + " (binário " + bin + "): disco " + disco + ". Barras de 1 a " + Math.min(K, 127) + (n > 7 ? " — a régua mostra até 7 discos." : ".");
+}
+$("mk-n").addEventListener("input", calcK);
+$("mk-k").addEventListener("input", calcK);
+calcK();
+
+criarReplay($("rp1"), 1);
+criarReplay($("rp2"), 2);
+document.querySelectorAll(".esquema, .m").forEach(realcar);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Funções recursivas — Matemática Discreta · IFTM</title>
+<meta name="description" content="Teoria da recursão, parte 1: funções recursivas primitivas e o comando for, minimização e o comando while, a função de Ackermann e os conjuntos recursivos.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2307090f'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='serif' font-size='38' font-style='italic' fill='%23f5a623'%3E%CE%BC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07090f; --surface:#0d1119; --surface2:#111725;
+    --rule:#1b2230; --text:#e7eaf0; --muted:#868ea2; --dim:#5f6779;
+    --amber:#f5a623; --amber-dim:#8a5f16; --azul:#6fb3d2; --rosa:#d2789a; --verde:#7fd28e;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --serif:"IBM Plex Serif", Georgia, serif;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);
+       font-size:15px;line-height:1.68;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:62rem;margin:0 auto;padding:clamp(2.5rem,8vw,5rem) clamp(1rem,5vw,2.5rem) 4rem;}
+  .eyebrow{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 1.1rem;}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,5.5vw,2.8rem);line-height:1.1;
+     letter-spacing:-.015em;margin:0;}
+  .lead{color:var(--muted);max-width:43rem;margin:1rem 0 0;}
+  section{margin-top:clamp(2.8rem,7vw,4.2rem);}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.45rem;line-height:1.25;margin:0 0 .25rem;}
+  .kicker{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 .7rem;}
+  .sub{color:var(--muted);max-width:46rem;margin:0 0 1.3rem;font-size:.9rem;}
+  a{color:var(--azul);}
+  a:hover{color:var(--amber);}
+
+  .cartao{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.3rem 1.4rem;}
+  .duas{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(17.5rem,1fr));}
+  .tres{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));}
+  .cartao h3{font-family:var(--serif);font-weight:600;font-size:1.05rem;margin:0 0 .55rem;}
+  .cartao p{margin:.45rem 0 0;color:var(--muted);font-size:.86rem;}
+  .cartao p:first-of-type{margin-top:0;}
+  .cartao h3 + p{margin-top:0;}
+  .form{font-family:var(--serif);font-size:1.02rem;color:var(--azul);white-space:nowrap;}
+  .gr{color:var(--amber);}
+  b.t{color:var(--text);font-weight:500;}
+
+  ul.limpa{list-style:none;margin:.2rem 0 0;padding:0;}
+  ul.limpa li{padding:.5rem 0;border-top:1px solid var(--rule);font-size:.84rem;color:var(--muted);}
+  ul.limpa li:first-child{border-top:0;padding-top:.1rem;}
+  ul.limpa li .form{display:inline-block;min-width:4.2rem;}
+  ul.limpa li b{color:var(--text);font-weight:500;}
+  ol.rec{margin:.3rem 0 0;padding-left:1.25rem;color:var(--muted);font-size:.85rem;}
+  ol.rec li{margin:.3rem 0;}
+  ol.rec b{color:var(--text);font-weight:500;}
+
+  .nota{margin-top:1rem;padding:.85rem 1rem;border-left:2px solid var(--amber);background:var(--surface);
+        font-size:.83rem;color:var(--muted);border-radius:0 8px 8px 0;}
+  .nota b{color:var(--amber);font-weight:500;}
+  .nota.azul{border-left-color:var(--azul);} .nota.azul b{color:var(--azul);}
+
+  table{width:100%;border-collapse:collapse;font-size:.84rem;}
+  th,td{text-align:left;padding:.5rem .65rem;border-bottom:1px solid var(--rule);vertical-align:top;}
+  th{font-size:.63rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:400;}
+  tr:last-child td{border-bottom:0;}
+  .tabela{background:var(--surface);border:1px solid var(--rule);border-radius:12px;overflow-x:auto;}
+  td.fo{font-family:var(--serif);font-size:.98rem;color:var(--azul);white-space:nowrap;}
+  td.le{color:var(--muted);}
+  td.ab{color:var(--amber);white-space:nowrap;}
+
+  input[type=text], input[type=number]{font-family:var(--mono);font-size:1rem;padding:.6rem .8rem;
+    background:var(--surface2);color:var(--text);border:1px solid var(--rule);border-radius:8px;}
+  input[type=text]{width:100%;}
+  input:focus{outline:none;border-color:var(--amber);}
+  button{font-family:var(--mono);font-size:.84rem;padding:.55rem .95rem;background:var(--surface2);
+    color:var(--text);border:1px solid var(--rule);border-radius:8px;cursor:pointer;
+    transition:border-color .16s,color .16s;white-space:nowrap;}
+  button:hover,button:focus-visible{border-color:var(--amber);color:var(--amber);outline:none;}
+  button.primario{border-color:var(--amber-dim);color:var(--amber);}
+  button[disabled]{opacity:.35;cursor:default;border-color:var(--rule);color:var(--text);}
+  .linha{display:flex;gap:.5rem;align-items:center;}
+  .linha input{flex:1;min-width:0;}
+  .chips{display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;margin-top:.8rem;}
+  .chips .rot{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-right:.3rem;}
+  .chip{font-size:.8rem;padding:.2rem .65rem;border-radius:20px;background:none;}
+  .chip.sel{border-color:var(--amber);color:var(--amber);}
+  .rot{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.35rem;}
+  .erro{color:var(--rosa);font-size:.88rem;}
+
+  .proxima{display:block;margin-top:clamp(2.8rem,7vw,4rem);text-decoration:none;background:var(--surface);
+    border:1px solid var(--amber-dim);border-radius:12px;padding:1.4rem 1.5rem;color:var(--text);
+    transition:border-color .16s;}
+  .proxima:hover,.proxima:focus-visible{border-color:var(--amber);color:var(--text);outline:none;}
+  .proxima .rot{color:var(--amber);}
+  .proxima strong{display:block;font-family:var(--serif);font-weight:600;font-size:1.3rem;margin:.1rem 0 .35rem;}
+  .proxima span.d{color:var(--muted);font-size:.86rem;}
+  .proxima .seta{float:right;color:var(--amber);font-size:1.4rem;line-height:1;transition:transform .16s;}
+  .proxima:hover .seta{transform:translateX(4px);}
+
+  footer{margin:3rem 0 0;padding:1.4rem 0 0;border-top:1px solid var(--rule);font-size:.76rem;line-height:1.8;color:var(--muted);}
+  footer a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--rule);transition:color .16s,border-color .16s;}
+  footer a:hover,footer a:focus-visible{color:var(--amber);border-color:var(--amber);outline:none;}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important;}}
+
+  pre.codigo{font-family:var(--mono);font-size:.84rem;line-height:1.75;background:var(--surface2);color:var(--text);
+             border:1px solid var(--rule);border-radius:8px;padding:.85rem 1rem;margin:.6rem 0 0;overflow-x:auto;white-space:pre;}
+  pre.codigo .c{color:var(--dim);}
+  pre.codigo .kw{color:var(--rosa);}
+  .rotulo-cod{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:block;margin:.9rem 0 0;}
+  .esquema{font-family:var(--serif);font-size:1.12rem;color:var(--azul);line-height:1.9;margin:.5rem 0 0;overflow-x:auto;white-space:nowrap;}
+  .esquema .k{color:var(--amber);}
+  .lab{margin-top:1rem;}
+  .lab .controles{display:flex;flex-wrap:wrap;gap:.8rem 1.2rem;align-items:center;margin-top:.9rem;}
+  .lab label{font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:.45rem;}
+  .lab input[type=number]{width:5.2rem;padding:.4rem .55rem;font-size:.95rem;}
+  .lab input[type=range]{accent-color:var(--amber);}
+  .painel{background:var(--surface2);border:1px solid var(--rule);border-radius:10px;padding:1rem 1.1rem;margin-top:1rem;min-width:0;}
+  .grande{font-family:var(--serif);font-size:2rem;line-height:1.15;color:var(--text);margin:.1rem 0 .3rem;overflow-wrap:anywhere;}
+  .grande small{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:.5rem;}
+  .estado{font-size:.84rem;color:var(--muted);margin:.5rem 0 0;}
+  .estado b{font-weight:500;}
+  .ok{color:var(--verde);} .mal{color:var(--rosa);} .am{color:var(--amber);}
+  .rolagem{max-height:19rem;overflow-y:auto;margin-top:.6rem;border-top:1px solid var(--rule);}
+  .rolagem table td{padding:.3rem .55rem;font-size:.82rem;}
+  .rolagem table td.fo{font-size:.92rem;}
+  .rolagem tr.destaque td{background:rgba(245,166,35,.08);}
+  .par{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));margin-top:1rem;}
+  .par > div{min-width:0;}
+  [data-c]{border-radius:3px;transition:background-color .15s,color .15s;cursor:default;}
+  [data-c].lit{background:rgba(245,166,35,.18);color:var(--text);}
+  .dica-par{font-size:.74rem;color:var(--muted);margin:.6rem 0 0;}
+
+  /* matemática em destaque */
+  .esquema{background:rgba(111,179,210,.07);border-left:3px solid var(--azul);border-radius:0 8px 8px 0;
+           padding:.55rem .95rem;color:#aab6cb;font-size:1.16rem;}
+  .cartao p.esquema, .cartao .esquema{font-size:1.14rem;line-height:1.85;}
+  .esquema + .esquema{margin-top:.5rem;}
+  .m{font-family:var(--serif);font-size:1.12em;color:#aab6cb;background:rgba(111,179,210,.08);padding:0 .28em;border-radius:4px;white-space:nowrap;}
+  .mf{color:#8fcbea;font-style:normal;}
+  .mv{color:var(--text);font-style:italic;}
+  .mn{color:var(--verde);}
+  .mp{color:var(--muted);font-size:.9em;}
+  .esquema .k, .esquema .k *{color:var(--amber);}
+  [data-c].lit .mv,[data-c].lit .mf{color:#fff;}
+  table.paralelo{width:100%;border-collapse:collapse;}
+  table.paralelo th{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+                    text-align:left;padding:.45rem .55rem;border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--surface2);font-weight:400;}
+  table.paralelo td{padding:.38rem .55rem;border-bottom:1px solid var(--rule);vertical-align:top;}
+  table.paralelo td.et{font-family:var(--mono);font-size:.7rem;color:var(--muted);white-space:nowrap;}
+  table.paralelo td.der{font-family:var(--serif);font-size:.98rem;color:#aab6cb;overflow-wrap:anywhere;min-width:12rem;}
+  table.paralelo td.prg{font-family:var(--mono);font-size:.8rem;color:var(--text);white-space:nowrap;border-left:2px solid var(--rule);}
+  table.paralelo td.prg + td.prg{border-left:0;}
+  table.paralelo .ch{color:var(--rosa);}
+  table.paralelo .cv{color:var(--amber);}
+  table.paralelo .vz{color:var(--dim);}
+  table.paralelo tr.sobe td{background:rgba(245,166,35,.04);}
+  table.paralelo tr.fim td{background:rgba(127,210,142,.08);}
+  .tijolo .s{font-family:var(--serif);font-size:1.6rem;color:var(--amber);display:block;line-height:1.2;margin-bottom:.4rem;white-space:nowrap;}
+  .faixa{display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.6rem;}
+  .faixa span{font-family:var(--mono);font-size:.74rem;padding:.12rem .45rem;border-radius:5px;background:var(--surface);border:1px solid var(--rule);color:var(--muted);}
+  .faixa span.fim{border-color:var(--amber-dim);color:var(--amber);}
+  .faixa span.zero{border-color:rgba(127,210,142,.5);color:var(--verde);}
+  svg.traj{width:100%;height:120px;display:block;margin-top:.6rem;}
+  svg.traj path{fill:none;stroke:var(--azul);stroke-width:1.4;}
+  svg.traj line{stroke:var(--rule);}
+  .grade-ack td{text-align:right;font-variant-numeric:tabular-nums;}
+  .grade-ack td small{display:block;color:var(--dim);font-size:.68rem;}
+  .grade-ack th{text-align:right;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">IFTM · Matemática Discreta · Teoria da recursão, 1 de 2</p>
+  <h1>Funções recursivas</h1>
+  <p class="lead">Todas as funções desta página vão de ℕ em ℕ. Parte-se de três funções tão simples que parecem não fazer nada e de umas poucas maneiras de combiná-las. Com elas se constrói tudo o que um computador calcula. A construção tem dois andares, e cada um corresponde a um comando que você já conhece: o <b class="t">for</b> e o <b class="t">while</b>.</p>
+</header>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Funções básicas</p>
+  <h2>Três tijolos</h2>
+  <p class="sub">São as funções recursivas primitivas de partida. Nenhuma delas calcula nada de interessante sozinha.</p>
+  <div class="tres">
+    <div class="cartao tijolo">
+      <span class="s">0</span>
+      <h3>A constante zero</h3>
+      <p>Uma função sem argumentos, de aridade zero, que devolve 0. É o único número dado de saída.</p>
+    </div>
+    <div class="cartao tijolo">
+      <span class="s">S(k) = k + 1</span>
+      <h3>O sucessor</h3>
+      <p>Soma um. É a única operação aritmética disponível. Somar, multiplicar e todo o resto terão de ser construídos a partir dela.</p>
+    </div>
+    <div class="cartao tijolo">
+      <span class="s">P<sub>i</sub><sup>n</sup>(x₁, …, xₙ) = xᵢ</span>
+      <h3>As projeções</h3>
+      <p>Recebem n argumentos e devolvem o i-ésimo. Servem para escolher, entre vários valores disponíveis, aquele que interessa, e para descartar os outros — como, num programa, recuperar uma posição escolhida de um vetor.</p>
+    </div>
+  </div>
+  <div class="nota azul"><b>É a mesma assinatura da aritmética de Peano:</b> um zero e um sucessor. A diferença é de propósito. Na <a href="../logica/logica_predicados_aritmetica.html">página de lógica de predicados</a>, A3 a A6 eram axiomas sobre a soma e o produto. Aqui, soma e produto vão ser construídos — e o esquema de construção é o mesmo daqueles axiomas.</div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Operações</p>
+  <h2>Compor e repetir</h2>
+  <p class="sub">Duas operações produzem funções novas a partir de funções já geradas. As recursivas primitivas são as funções básicas, mais tudo o que se obtém delas aplicando essas operações um número finito de vezes.</p>
+
+  <div class="duas">
+    <div class="cartao">
+      <h3>Composição</h3>
+      <p>Dada <span class="m">f</span>, de aridade <span class="m">k</span>, e <span class="m">g₁, …, gₖ</span>, todas de aridade <span class="m">m</span>:</p>
+      <p class="esquema">h(x₁, …, xₘ) = f(g₁(x₁, …, xₘ), …, gₖ(x₁, …, xₘ))</p>
+      <p>Corresponde, em um programa, a calcular cada <span class="m">gᵢ</span> e passar os resultados para <span class="m">f</span>. Faz pensar em uma chamada de função com outras chamadas nos argumentos. Exemplo: <span class="form">S(S(P<sub>1</sub><sup>1</sup>(x)))</span> soma dois.</p>
+    </div>
+    <div class="cartao">
+      <h3>Recursão primitiva</h3>
+      <p>Dada <span class="m">f</span>, de aridade <span class="m">k</span>, e <span class="m">g</span>, de aridade <span class="m">k + 2</span>:</p>
+      <p class="esquema">h(<span class="k">0</span>, x₁, …, xₖ) = f(x₁, …, xₖ)<br>h(<span class="k">S(y)</span>, x₁, …, xₖ) = g(y, h(y, x₁, …, xₖ), x₁, …, xₖ)</p>
+      <p>O valor em <span class="m">S(y)</span> se calcula a partir do valor em <span class="m">y</span>. Para chegar a <span class="m">h(5, x₁, …, xₖ)</span>, passa-se por <span class="m">h(0, x₁, …, xₖ)</span>, <span class="m">h(1, x₁, …, xₖ)</span>, …, <span class="m">h(4, x₁, …, xₖ)</span>: cinco passos, nem mais nem menos.</p>
+    </div>
+  </div>
+
+  <div class="cartao" style="margin-top:1rem">
+    <h3>A recursão primitiva é um for</h3>
+    <p>Escreva o esquema como programa e ele vira um laço com número de voltas conhecido antes de começar:</p>
+    <div class="par">
+      <div>
+        <span class="rotulo-cod">definição</span>
+        <p class="esquema"><span data-c="b">h(0, x₁, …, xₖ) = f(x₁, …, xₖ)</span><br><span data-c="p">h(S(y), x₁, …, xₖ) = g(y, h(y, x₁, …, xₖ), x₁, …, xₖ)</span></p>
+      </div>
+      <div>
+        <span class="rotulo-cod">programa</span>
+<pre class="codigo"><span data-c="b">h = f(x1, ..., xk);</span>
+<span data-c="l"><span class="kw">for</span> (i = 0; i &lt; y; i++)</span>
+    <span data-c="p">h = g(i, h, x1, ..., xk);</span>
+<span class="kw">return</span> h;</pre>
+      </div>
+    </div>
+    <p class="dica-par">Passe o cursor sobre uma parte da definição ou do programa para ver o que lhe corresponde.</p>
+    <p style="margin-top:.8rem">O ponto decisivo está na linha do <b class="t">for</b>: o laço dá exatamente y voltas, e o corpo não pode alterar nem i nem y. Por isso todo programa desse tipo termina, e toda função recursiva primitiva é <b class="t">total</b> — tem valor para qualquer argumento.</p>
+  </div>
+
+  <div class="cartao lab">
+    <h3>Laboratório do for</h3>
+    <p>Escolha uma função, ajuste as entradas e acompanhe o laço volta a volta. Cada função usa a anterior no corpo do laço: o produto repete a soma, a potência repete o produto. São “fors” dentro de “fors”.</p>
+    <p>A tabela mostra as duas execuções lado a lado. A definição primeiro <b class="t">desce</b>, de y até 0, reescrevendo sem calcular nada; depois <b class="t">sobe</b>, e cada subida é uma volta do for. O programa só faz a subida: começa direto do caso base.</p>
+    <div class="chips" id="for-chips"><span class="rot">função</span></div>
+    <div class="chips" id="for-num"><span class="rot">numerais</span><button class="chip sel" data-u="1">S(S(0))</button><button class="chip" data-u="0">0, 1, 2, …</button></div>
+    <div class="par">
+      <div>
+        <span class="rotulo-cod">definição</span>
+        <p class="esquema" id="for-def"></p>
+      </div>
+      <div>
+        <span class="rotulo-cod">programa</span>
+        <pre class="codigo" id="for-cod"></pre>
+      </div>
+    </div>
+    <div class="controles" id="for-ctrl"></div>
+    <div class="painel">
+      <span class="rot">resultado</span>
+      <div class="grande" id="for-val"></div>
+      <p class="estado" id="for-est"></p>
+      <div class="rolagem" style="max-height:26rem"><table class="paralelo" id="for-traco"></table></div>
+    </div>
+  </div>
+
+  <div class="nota"><b>Uma linguagem só com for.</b> Meyer e Ritchie, em 1967, definiram a linguagem LOOP: variáveis, incremento, atribuição e laços com número de voltas fixado na entrada. Os programas LOOP calculam exatamente as funções recursivas primitivas. A profundidade de aninhamento dos laços mede o quanto a função pode crescer.</div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Minimização</p>
+  <h2>Procurar sem saber até onde</h2>
+  <p class="sub">A classe das funções μ-recursivas acrescenta um operador às anteriores. Ele não repete um número fixo de vezes: procura.</p>
+
+  <div class="cartao">
+    <h3>O operador μ</h3>
+    <p>Dada uma função total <span class="m">f(y, x₁, …, xₖ)</span>, <span class="m">(μf)(x₁, …, xₖ)</span> é o menor <span class="m">z</span> tal que <span class="m">f(z, x₁, …, xₖ) = 0</span>. Mais precisamente: <span class="m">f(0, x₁, …, xₖ)</span>, …, <span class="m">f(z − 1, x₁, …, xₖ)</span> são todos maiores que zero, e <span class="m">f(z, x₁, …, xₖ) = 0</span>.</p>
+    <p>A busca começa em zero e avança de um em um. Se nenhum y anula f, ela não termina — e a função não tem valor naquele ponto.</p>
+    <div class="par">
+      <div>
+        <span class="rotulo-cod">definição</span>
+        <p class="esquema"><span data-c="m0">(μf)(x₁, …, xₖ)</span> = o menor z tal que<br>&nbsp;&nbsp;<span data-c="mc">f(z, x₁, …, xₖ) = 0</span>, sendo f(y, x₁, …, xₖ) &gt; 0 para y &lt; z</p>
+      </div>
+      <div>
+        <span class="rotulo-cod">programa</span>
+<pre class="codigo"><span data-c="m0">y = 0;</span>
+<span data-c="mc"><span class="kw">while</span> (f(y, x1, ..., xk) != 0)</span>
+    <span data-c="mi">y = y + 1;</span>
+<span class="kw">return</span> y;</pre>
+      </div>
+    </div>
+    <p style="margin-top:.8rem">Agora não há limite escrito em lugar nenhum. O while para quando acha — se achar. Por isso uma função μ-recursiva pode ser <b class="t">parcial</b>: pode não ter valor para alguns argumentos.</p>
+  </div>
+
+  <div class="cartao lab">
+    <h3>Laboratório do while</h3>
+    <p>Cada busca abaixo é uma minimização. Avance de um em um para acompanhar, lado a lado, o que a definição pergunta e o que o while faz; ou de mil em mil, para buscas longas.</p>
+    <div class="chips" id="mu-chips"><span class="rot">busca</span></div>
+    <div class="par">
+      <div>
+        <span class="rotulo-cod">o que se procura</span>
+        <p class="esquema" id="mu-def"></p>
+        <span class="rotulo-cod">programa</span>
+        <pre class="codigo" id="mu-cod"></pre>
+        <p class="estado" id="mu-coment"></p>
+      </div>
+      <div>
+        <div class="controles" id="mu-ctrl"></div>
+        <div class="controles">
+          <button class="primario" id="mu-um">um passo</button>
+          <button id="mu-mais">+1000</button>
+          <button id="mu-reini">recomeçar</button>
+        </div>
+        <div class="painel">
+          <span class="rot">estado da busca</span>
+          <div class="grande" id="mu-val"></div>
+          <p class="estado" id="mu-est"></p>
+        </div>
+      </div>
+    </div>
+    <div class="rolagem" style="max-height:24rem"><table class="paralelo" id="mu-traco"></table></div>
+  </div>
+
+  <div class="nota azul"><b>Um único while basta.</b> Kleene mostrou, em 1936, que toda função μ-recursiva pode ser escrita como uma função recursiva primitiva aplicada ao resultado de uma única minimização. Em termos de programa: “fors” à vontade e um só while, no lugar certo. Todo o risco de não terminar se concentra nele.</div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Totais e primitivas</p>
+  <h2>Uma função total que nenhum for alcança</h2>
+  <p class="sub">Toda função recursiva primitiva é total. A recíproca é falsa: há funções totais e computáveis que não são primitivas. O contraexemplo mais usado é a função de Ackermann.</p>
+
+  <div class="duas">
+    <div class="cartao">
+      <h3>A definição</h3>
+      <p class="esquema">A(0, n) = n + 1<br>A(m + 1, 0) = A(m, 1)<br>A(m + 1, n + 1) = A(m, A(m + 1, n))</p>
+      <p>Está bem definida: a cada chamada, ou m diminui, ou m fica igual e n diminui. A recursão sempre termina, e A é total.</p>
+      <p>Mas a terceira linha chama A dentro do argumento de A. O número de voltas de cada etapa só se conhece depois de calcular a etapa anterior. Não há como escrever isso com um número fixo de “fors” aninhados.</p>
+    </div>
+    <div class="cartao">
+      <h3>Cada linha, um for a mais</h3>
+      <div class="tabela" style="background:transparent;border:0">
+      <table>
+        <tr><td class="fo">A(1, n) = n + 2</td><td class="le">soma</td></tr>
+        <tr><td class="fo">A(2, n) = 2n + 3</td><td class="le">produto</td></tr>
+        <tr><td class="fo">A(3, n) = 2<sup>n+3</sup> − 3</td><td class="le">potência</td></tr>
+        <tr><td class="fo">A(4, n) = 2<sup>2<sup>⋰</sup></sup> − 3</td><td class="le">torre de n + 3 dois</td></tr>
+      </table></div>
+      <p>Para cada <span class="m">m</span> fixo, <span class="m">n ↦ A(m, n)</span> é recursiva primitiva. A função inteira não é: cresce mais depressa que qualquer função recursiva primitiva, porque cada valor de m exige mais um nível de laços.</p>
+    </div>
+  </div>
+
+  <div class="cartao lab">
+    <h3>Contador de chamadas</h3>
+    <p>A página calcula A(m, n) com uma pilha explícita — um while que empilha o que ainda falta fazer — e conta os passos. Há um limite de 200 milhões.</p>
+    <div class="controles">
+      <label>m <input type="number" id="ack-m" min="0" max="5" value="3"></label>
+      <label>n <input type="number" id="ack-n" min="0" max="20" value="3"></label>
+      <button class="primario" id="ack-ir">calcular</button>
+    </div>
+    <div class="painel">
+      <div class="grande" id="ack-val"></div>
+      <p class="estado" id="ack-est"></p>
+    </div>
+    <span class="rotulo-cod">valores e passos</span>
+    <div class="tabela" style="margin-top:.5rem"><table class="grade-ack" id="ack-grade"></table></div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section>
+  <p class="kicker">Conjuntos</p>
+  <h2>Gerar, aceitar, rejeitar</h2>
+  <p class="sub">Com funções recursivas se fazem duas coisas com conjuntos: gerá-los, a partir de sementes e de funções que produzem novos elementos; e decidir se um objeto pertence a eles.</p>
+
+  <div class="duas">
+    <div class="cartao lab" style="margin-top:0">
+      <h3>Um conjunto gerado</h3>
+      <p>Semente: 1. Funções: <span class="form">x ↦ 2x</span> e <span class="form">x ↦ 3x + 1</span>. O conjunto é tudo o que se alcança a partir de 1 aplicando as duas funções quantas vezes se quiser.</p>
+      <div class="controles">
+        <label>o número <input type="number" id="ger-t" min="1" max="100000000" value="22"></label>
+        <button class="primario" id="ger-ir">pertence?</button>
+      </div>
+      <div class="painel">
+        <div class="grande" id="ger-val"></div>
+        <p class="estado" id="ger-est"></p>
+      </div>
+      <p>Aqui a resposta é sempre sim ou não, porque as duas funções só aumentam: basta gerar tudo o que não passa do número procurado. O conjunto é <b class="t">recursivo</b> — decidível.</p>
+    </div>
+    <div class="cartao lab" style="margin-top:0">
+      <h3>Um while que ninguém sabe se para</h3>
+      <p>Enquanto n ≠ 1: se n é par, divida por 2; senão, faça 3n + 1. É o problema de Collatz. Todos os números já testados chegam a 1. Ninguém provou que todos chegam.</p>
+      <div class="controles">
+        <label>n <input type="number" id="col-n" min="1" value="27"></label>
+        <button class="primario" id="col-ir">executar</button>
+      </div>
+      <div class="painel">
+        <div class="grande" id="col-val"></div>
+        <p class="estado" id="col-est"></p>
+        <svg class="traj" id="col-svg" viewBox="0 0 600 120" preserveAspectRatio="none" aria-label="trajetória"></svg>
+      </div>
+      <p>Para perguntar se n leva a 1, basta executar: se levar, a resposta chega. Se não levasse, o programa rodaria para sempre, sem nunca responder não.</p>
+    </div>
+  </div>
+
+  <div class="nota"><b>Aceitar sem rejeitar.</b> Quando só se pode responder sim — esperando que a resposta chegue —, o conjunto é <b>recursivamente enumerável</b>. A diferença em relação ao conjunto recursivo é a diferença entre o for e o while. Por isso a teoria precisa incluir programas que, sempre ou em alguns casos, não terminam: eles não são acidentes. Sem a minimização, ficariam de fora funções que se calculam; com ela, entram junto as que não param.</div>
+  <div class="nota azul"><b>E as funções totais?</b> Ficam sem caracterização precisa. As recursivas primitivas são poucas — Ackermann fica de fora. As μ-recursivas são demais — incluem as parciais. Separar, entre estas, as que param sempre exigiria decidir se um programa termina, e Turing mostrou que isso não tem solução geral.</div>
+</section>
+
+<a class="proxima" href="recursao_hanoi.html">
+  <span class="seta" aria-hidden="true">→</span>
+  <span class="rot">próxima página · teoria da recursão, 2 de 2</span>
+  <strong>A torre de Hanói</strong>
+  <span class="d">Duas soluções por recorrência — uma sobre o número de discos, em Prolog, outra sobre o número do movimento, em LISP — e a semelhança entre definição e código.</span>
+</a>
+
+<footer>
+  <a href="../index.html">← Matemática Discreta</a> · Prof. André Lemos · IFTM Campus Uberlândia Centro
+</footer>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const fmt = x => { const s = String(x); return s.length > 24 ? s.slice(0, 10) + "…" + s.slice(-6) + " (" + s.length + " dígitos)" : s.replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
+
+/* ---------- correspondência definição ↔ programa ---------- */
+function ligarPares(raiz){
+  raiz.addEventListener("mouseover", e => {
+    const el = e.target.closest("[data-c]"); if(!el) return;
+    const c = el.dataset.c, card = el.closest(".cartao");
+    card.querySelectorAll('[data-c="' + c + '"]').forEach(x => x.classList.add("lit"));
+  });
+  raiz.addEventListener("mouseout", e => {
+    const el = e.target.closest("[data-c]"); if(!el) return;
+    el.closest(".cartao").querySelectorAll(".lit").forEach(x => x.classList.remove("lit"));
+  });
+}
+ligarPares(document.body);
+
+/* ================= realce da matemática ================= */
+const PALAVRA_SOLTA = new Set(["e", "o", "a", "é"]);
+function realcar(raiz){
+  const alvos = [];
+  const w = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT, {
+    acceptNode: n => n.parentElement.closest(".k, .ch, .cv, .vz, .mf, .mv, .mn, .mp, pre, .ok, .mal, .am") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+  });
+  while(w.nextNode()) alvos.push(w.currentNode);
+  alvos.forEach(no => {
+    const t = no.nodeValue, re = /([A-Za-zμÀ-ÿ]+)([₀-₉ᵢⱼₖₘₙ]*)|(\d+)/g;
+    let m, ult = 0, frag = document.createDocumentFragment(), mudou = false;
+    while((m = re.exec(t))){
+      frag.appendChild(document.createTextNode(t.slice(ult, m.index)));
+      let cls;
+      if(m[3]) cls = "mn";
+      else {
+        const prox = t[m.index + m[0].length];
+        if(prox === "(" || m[1] === "P" || m[1][0] === "μ") cls = "mf";
+        else if(m[1].length === 1 && !PALAVRA_SOLTA.has(m[1])) cls = "mv";
+        else cls = "mp";
+      }
+      const sp = document.createElement("span"); sp.className = cls; sp.textContent = m[0];
+      frag.appendChild(sp); ult = m.index + m[0].length; mudou = true;
+    }
+    if(!mudou) return;
+    frag.appendChild(document.createTextNode(t.slice(ult)));
+    no.parentNode.replaceChild(frag, no);
+  });
+}
+
+/* ================= laboratório do for ================= */
+/* custo = número de aplicações do sucessor, seguindo as definições à risca */
+let unario = true, decimalUsado = false;
+const N = n => { n = BigInt(n); if(unario && n <= 20n) return "S(".repeat(Number(n)) + "0" + ")".repeat(Number(n)); if(unario) decimalUsado = true; return fmt(n); };
+const kw = t => '<span class="kw">' + t + "</span>", cm = t => '<span class="c">' + t + "</span>";
+const FOR = [
+  { id: "soma", nome: "soma", args: [["y", 3], ["x", 2]], niveis: 1,
+    def: "soma(0, x) = x<br>soma(S(y), x) = S(soma(y, x))",
+    cod: "soma = x;\n" + kw("for") + " (i = 0; i &lt; y; i++)\n    soma = soma + 1;      " + cm("// S(soma)") + "\n" + kw("return") + " soma;",
+    base: v => v.x, emb: (yp, v) => ["S(", ")"], ap: (yp, h, v) => h + 1n, custo: () => 1n },
+  { id: "prod", nome: "produto", args: [["y", 3], ["x", 4]], niveis: 2,
+    def: "prod(0, x) = 0<br>prod(S(y), x) = soma(x, prod(y, x))",
+    cod: "prod = 0;\n" + kw("for") + " (i = 0; i &lt; y; i++)\n    prod = soma(x, prod); " + cm("// um “for” dentro") + "\n" + kw("return") + " prod;",
+    base: () => 0n, emb: (yp, v) => ["soma(" + N(v.x) + ", ", ")"], ap: (yp, h, v) => h + v.x, custo: (yp, h, v) => v.x },
+  { id: "pot", nome: "potência", args: [["y", 3], ["x", 2]], niveis: 3,
+    def: "pot(0, x) = S(0)<br>pot(S(y), x) = prod(x, pot(y, x))",
+    cod: "pot = 1;\n" + kw("for") + " (i = 0; i &lt; y; i++)\n    pot = prod(x, pot);   " + cm("// dois “fors” dentro") + "\n" + kw("return") + " pot;",
+    base: () => 1n, emb: (yp, v) => ["prod(" + N(v.x) + ", ", ")"], ap: (yp, h, v) => h * v.x, custo: (yp, h, v) => h * v.x },
+  { id: "fat", nome: "fatorial", args: [["y", 4]], niveis: 3,
+    def: "fat(0) = S(0)<br>fat(S(y)) = prod(S(y), fat(y))",
+    cod: "fat = 1;\n" + kw("for") + " (i = 0; i &lt; y; i++)\n    fat = prod(i + 1, fat); " + cm("// dois “fors” dentro") + "\n" + kw("return") + " fat;",
+    base: () => 1n, emb: (yp) => ["prod(" + N(yp + 1n) + ", ", ")"], ap: (yp, h) => h * (yp + 1n), custo: (yp, h) => h * (yp + 1n) },
+  { id: "pred", nome: "predecessor", args: [["y", 4]], niveis: 1,
+    def: "pred(0) = 0<br>pred(S(y)) = y",
+    cod: "pred = 0;\n" + kw("for") + " (i = 0; i &lt; y; i++)\n    pred = i;   " + cm("// guarda i") + "\n" + kw("return") + " pred;" }
+];
+let forAtual = FOR[0];
+const forVals = {};
+function forEscolher(f){
+  forAtual = f;
+  document.querySelectorAll("#for-chips .chip").forEach(b => b.classList.toggle("sel", b.dataset.id === f.id));
+  $("for-def").innerHTML = f.def; realcar($("for-def"));
+  $("for-cod").innerHTML = f.cod;
+  $("for-ctrl").innerHTML = f.args.map(([a, d]) =>
+    '<label>' + a + ' <input type="range" min="0" max="' + (a === "y" ? 10 : 9) + '" data-a="' + a + '" value="' +
+    (forVals[f.id + a] ?? d) + '"> <b class="t" data-mostra="' + a + '"></b></label>').join("");
+  $("for-ctrl").querySelectorAll("input").forEach(inp => inp.addEventListener("input", () => { forVals[f.id + inp.dataset.a] = +inp.value; forRodar(); }));
+  forRodar();
+}
+function forRodar(){
+  const f = forAtual, v = {};
+  decimalUsado = false;
+  $("for-ctrl").querySelectorAll("input").forEach(inp => { v[inp.dataset.a] = BigInt(inp.value); $("for-ctrl").querySelector('[data-mostra="' + inp.dataset.a + '"]').textContent = inp.value; });
+  const Y = Number(v.y), nm = f.id;
+  const chamada = yy => '<span class="ch">' + nm + "(" + N(yy) + (v.x !== undefined ? ", " + N(v.x) : "") + ")</span>";
+  const vazio = '<td class="prg vz">·</td><td class="prg vz">·</td>';
+  const linha = (cls, et, der, i, h) => '<tr' + (cls ? ' class="' + cls + '"' : "") + '><td class="et">' + et + '</td><td class="der">' + der + "</td>" +
+    (i === null ? vazio : '<td class="prg">' + i + '</td><td class="prg">' + nm + " = " + fmt(h) + "</td>") + "</tr>";
+  const L = ['<tr><th>etapa</th><th>definição, reescrita passo a passo</th><th>i</th><th>' + nm + "</th></tr>"];
+  let h, custo = 0n;
+  if(f.id === "pred"){
+    L.push(linha("", "início", chamada(BigInt(Y)), null));
+    L.push(linha(Y ? "" : "fim", Y ? "regra" : "caso base", '<span class="cv">' + N(BigInt(Math.max(0, Y - 1))) + "</span>", "—", 0n));
+    h = 0n;
+    for(let i = 0; i < Y; i++){ h = BigInt(i); L.push(linha(i === Y - 1 ? "sobe fim" : "sobe", "volta " + (i + 1), '<span class="vz">·</span>', i, h)); }
+  } else {
+    const emb = [];
+    for(let j = 0; j <= Y; j++){
+      const pre = emb.map(e => e[0]).join(""), pos = emb.map(e => e[1]).reverse().join("");
+      L.push(linha("", j === 0 ? "início" : "desce", pre + chamada(BigInt(Y - j)) + pos, null));
+      if(j < Y) emb.push(f.emb(BigInt(Y - j - 1), v));
+    }
+    h = f.base(v);
+    const mostra = k => emb.slice(0, k).map(e => e[0]).join("") + '<span class="cv">' + N(h) + "</span>" + emb.slice(0, k).map(e => e[1]).reverse().join("");
+    L.push(linha(Y ? "" : "fim", "caso base", mostra(Y), "—", h));
+    for(let t = 1; t <= Y; t++){
+      const yp = BigInt(t - 1);
+      custo += f.custo(yp, h, v); h = f.ap(yp, h, v);
+      L.push(linha(t === Y ? "sobe fim" : "sobe", "volta " + t, mostra(Y - t), t - 1, h));
+    }
+  }
+  $("for-traco").innerHTML = L.join("");
+  $("for-traco").querySelectorAll("td.der").forEach(realcar);
+  $("for-val").innerHTML = '<span class="m" style="font-size:.8em">' + nm + "(" + f.args.map(([a]) => fmt(v[a])).join(", ") + ")</span> = " + fmt(h);
+  realcar($("for-val"));
+  let est = "O laço deu <b class=\"t\">" + Y + (Y === 1 ? " volta" : " voltas") + "</b> — o número estava decidido antes da primeira. " +
+    "“Fors” aninhados: <b class=\"t\">" + f.niveis + "</b>.";
+  if(f.id === "pred") est += " Aqui a definição chega ao resultado em um passo, porque a regra já entrega o y de dentro de S(y). O for não tem como “descer”: precisa subir de 0 até y − 1, guardando sempre o último i.";
+  else est += " Aplicações do sucessor: <b class=\"am\">" + fmt(custo) + "</b>.";
+  if(decimalUsado) est += ' <span class="am">Numerais maiores que 20 aparecem em decimal.</span>';
+  $("for-est").innerHTML = est;
+}
+FOR.forEach(f => { const b = document.createElement("button"); b.className = "chip"; b.textContent = f.nome; b.dataset.id = f.id; b.onclick = () => forEscolher(f); $("for-chips").appendChild(b); });
+document.querySelectorAll("#for-num .chip").forEach(b => b.onclick = () => {
+  unario = b.dataset.u === "1";
+  document.querySelectorAll("#for-num .chip").forEach(c => c.classList.toggle("sel", c === b));
+  forEscolher(forAtual);
+});
+forEscolher(FOR[0]);
+
+/* ================= laboratório do while ================= */
+let crivo = new Uint8Array(2), crivoN = 1;
+function primo(k){
+  if(k < 2) return false;
+  if(k > crivoN){
+    crivoN = Math.max(k, crivoN * 2, 1024);
+    crivo = new Uint8Array(crivoN + 1); crivo[0] = crivo[1] = 1;
+    for(let i = 2; i * i <= crivoN; i++) if(!crivo[i]) for(let j = i * i; j <= crivoN; j += i) crivo[j] = 1;
+  }
+  return !crivo[k];
+}
+function parDePrimos(y){ for(let p = 2; p <= y / 2; p++) if(primo(p) && primo(y - p)) return p; return 0; }
+const SIM = '<b class="ok">sim</b>', NAO = '<span class="mal">não</span>';
+const MU = [
+  { id: "raiz", nome: "raiz inteira", args: [["x", 50]],
+    f: (y, v) => "f(" + y + ", " + v.x + ")",
+    def: v => "(μf)(" + v.x + "), com<br>f(y, " + v.x + ") = 0, se (y + 1)² &gt; " + v.x + "<br>f(y, " + v.x + ") = 1, caso contrário",
+    cod: "y = 0;\n" + kw("while") + " (!((y+1)*(y+1) &gt; x))\n    y = y + 1;\n" + kw("return") + " y;",
+    teste: (y, v) => (y + 1) * (y + 1) > v.x,
+    inst: (y, v) => "(" + y + " + 1)² = " + (y + 1) * (y + 1) + " &gt; " + v.x + "?",
+    coment: "Sempre termina: o quadrado cresce e acaba passando de x. Um for daria conta — com limite x, por exemplo." },
+  { id: "div", nome: "divisão inteira", args: [["a", 17], ["b", 5]],
+    f: (q, v) => "f(" + q + ", " + v.a + ", " + v.b + ")",
+    def: v => "(μf)(" + v.a + ", " + v.b + "), com<br>f(q, " + v.a + ", " + v.b + ") = 0, se (q + 1) · " + v.b + " &gt; " + v.a + "<br>f(q, " + v.a + ", " + v.b + ") = 1, caso contrário",
+    cod: "q = 0;\n" + kw("while") + " (!((q+1)*b &gt; a))\n    q = q + 1;\n" + kw("return") + " q;",
+    teste: (q, v) => (q + 1) * v.b > v.a,
+    inst: (q, v) => "(" + q + " + 1) · " + v.b + " = " + (q + 1) * v.b + " &gt; " + v.a + "?",
+    coment: "Termina para b > 0. Experimente b = 0: a divisão por zero vira uma busca sem fim. A função é parcial — não tem valor quando b = 0." },
+  { id: "primo", nome: "próximo primo", args: [["x", 90]],
+    f: (y, v) => "f(" + y + ", " + v.x + ")",
+    def: v => "(μf)(" + v.x + "), com<br>f(y, " + v.x + ") = 0, se y ≥ " + v.x + " e y é primo<br>f(y, " + v.x + ") = 1, caso contrário",
+    cod: "y = 0;\n" + kw("while") + " (!(y &gt;= x &amp;&amp; primo(y)))\n    y = y + 1;\n" + kw("return") + " y;",
+    teste: (y, v) => y >= v.x && primo(y),
+    inst: (y, v) => { if(y < v.x) return y + " &lt; " + v.x; if(primo(y)) return y + " ≥ " + v.x + " e é primo"; let d = 2; while(y % d) d++; return y < 2 ? y + " não é primo" : y + " = " + d + " · " + y / d; },
+    coment: "Sempre termina, porque há infinitos primos — mas isso é um teorema de Euclides, e não algo que o programa saiba. Quem garante a parada é uma demonstração, feita a despeito do programa." },
+  { id: "goldbach", nome: "contraexemplo de Goldbach", args: [],
+    f: y => "f(" + y + ")",
+    def: v => "(μf)( ), com<br>f(y) = 0, se y &gt; 2, y é par e não é soma de dois primos<br>f(y) = 1, caso contrário",
+    cod: "y = 0;\n" + kw("while") + " (!(y &gt; 2 &amp;&amp; y % 2 == 0\n         &amp;&amp; !somaDePrimos(y)))\n    y = y + 1;\n" + kw("return") + " y;",
+    teste: y => y > 2 && y % 2 === 0 && !parDePrimos(y),
+    inst: y => { if(y <= 2) return y + " ≤ 2"; if(y % 2) return y + " é ímpar"; const p = parDePrimos(y); return p ? y + " = " + p + " + " + (y - p) : y + " não é soma de dois primos"; },
+    coment: "Este while termina se e somente se a conjectura de Goldbach for falsa. Ninguém sabe. Escrever o programa é fácil; saber se ele para equivale a resolver um problema aberto desde 1742." }
+];
+let muAtual = MU[0], muY = 0, muFim = null, muLinhas = [];
+const muVals = {};
+function muValores(){ const v = {}; $("mu-ctrl").querySelectorAll("input").forEach(i => { v[i.dataset.a] = Math.max(0, parseInt(i.value, 10) || 0); }); return v; }
+function muEscolher(m){
+  muAtual = m;
+  document.querySelectorAll("#mu-chips .chip").forEach(b => b.classList.toggle("sel", b.dataset.id === m.id));
+  $("mu-ctrl").innerHTML = m.args.map(([a, d]) => '<label>' + a + ' <input type="number" min="0" max="100000" data-a="' + a + '" value="' + (muVals[m.id + a] ?? d) + '"></label>').join("");
+  $("mu-ctrl").querySelectorAll("input").forEach(i => i.addEventListener("input", () => { muVals[m.id + i.dataset.a] = i.value; muReiniciar(); }));
+  $("mu-cod").innerHTML = m.cod;
+  $("mu-coment").textContent = m.coment;
+  muReiniciar();
+}
+function muReiniciar(){
+  muY = 0; muFim = null; muLinhas = [];
+  $("mu-def").innerHTML = muAtual.def(muValores()); realcar($("mu-def"));
+  muMostrar();
+}
+function muMostrar(){
+  const nv = muAtual.cod[0];
+  const cab = "<tr><th>" + nv + "</th><th>definição: o que se pergunta, e o valor de f</th><th>while: teste e ação</th></tr>";
+  const MAX = 40, extra = muLinhas.length - MAX;
+  $("mu-traco").innerHTML = cab + (extra > 0 ? '<tr><td class="et" colspan="3">… ' + fmt(extra) + " linhas anteriores omitidas</td></tr>" : "") + muLinhas.slice(-MAX).join("");
+  $("mu-traco").querySelectorAll("td.der").forEach(realcar);
+  $("mu-traco").parentElement.scrollTop = 1e9;
+  const nada = muLinhas.length === 0;
+  $("mu-um").disabled = $("mu-mais").disabled = muFim !== null;
+  if(muFim !== null){
+    $("mu-val").innerHTML = nv + " = " + muFim;
+    $("mu-est").innerHTML = '<b class="ok">A busca terminou</b> depois de testar ' + fmt(muFim + 1) + (muFim === 0 ? " valor." : " valores.");
+  } else if(nada){
+    $("mu-val").textContent = "—";
+    $("mu-est").textContent = "O laço ainda não começou: " + nv + " = 0.";
+  } else {
+    $("mu-val").innerHTML = '<span class="am">ainda procurando</span>';
+    $("mu-est").innerHTML = "Testados " + fmt(muY) + " valores de " + nv + ", nenhum serviu. O programa não tem como saber se vai achar o próximo — nem se vai achar algum.";
+  }
+}
+function muAvancar(qt){
+  if(muFim !== null) return;
+  const v = muValores(), lim = muY + qt, m = muAtual, nv = m.cod[0];
+  while(muY < lim){
+    const ok = m.teste(muY, v);
+    muLinhas.push('<tr class="' + (ok ? "fim" : "") + '"><td class="et">' + muY + '</td><td class="der">' + m.inst(muY, v) + " " + (ok ? SIM : NAO) + " → " + m.f(muY, v) + " = " + (ok ? 0 : 1) + "</td>" +
+      '<td class="prg">' + (ok ? "condição falsa → sai; return " + muY : "condição verdadeira → " + nv + " = " + (muY + 1)) + "</td></tr>");
+    if(muLinhas.length > 400) muLinhas.splice(0, muLinhas.length - 400);
+    if(ok){ muFim = muY; break; }
+    muY++;
+  }
+  muMostrar();
+}
+MU.forEach(m => { const b = document.createElement("button"); b.className = "chip"; b.textContent = m.nome; b.dataset.id = m.id; b.onclick = () => muEscolher(m); $("mu-chips").appendChild(b); });
+$("mu-um").onclick = () => muAvancar(1);
+$("mu-mais").onclick = () => muAvancar(1000);
+$("mu-reini").onclick = muReiniciar;
+muEscolher(MU[0]);
+
+/* ================= Ackermann ================= */
+function ack(m, n, lim){
+  const st = [m]; let c = 0;
+  while(st.length){
+    if(++c > lim) return {v: null, c: c - 1};
+    m = st.pop();
+    if(m === 0) n = n + 1;
+    else if(n === 0){ n = 1; st.push(m - 1); }
+    else { st.push(m - 1); st.push(m); n = n - 1; }
+  }
+  return {v: n, c: c};
+}
+$("ack-ir").onclick = () => {
+  const m = Math.min(5, Math.max(0, +$("ack-m").value | 0)), n = Math.min(20, Math.max(0, +$("ack-n").value | 0));
+  $("ack-val").textContent = "calculando…"; $("ack-est").textContent = "";
+  setTimeout(() => {
+    const t = performance.now(), r = ack(m, n, 2e8), dt = Math.round(performance.now() - t);
+    if(r.v === null){
+      $("ack-val").innerHTML = '<span class="mal">interrompido</span>';
+      $("ack-est").innerHTML = "Depois de " + fmt(r.c) + " passos (" + dt + " ms), A(" + m + ", " + n + ") ainda não saiu. " +
+        (m >= 4 ? "Não é demora do computador: A(4, 2) tem 19.729 algarismos, e nenhuma máquina física chegaria a A(4, 3)." : "Aumente com cuidado.");
+    } else {
+      $("ack-val").innerHTML = "A(" + m + ", " + n + ") = " + fmt(r.v);
+      $("ack-est").innerHTML = fmt(r.c) + " passos da pilha, em " + dt + " ms.";
+    }
+  }, 20);
+};
+(function(){
+  let h = "<tr><th>m \\ n</th>" + [0,1,2,3,4,5].map(n => "<th>" + n + "</th>").join("") + "</tr>";
+  for(let m = 0; m <= 4; m++){
+    h += '<tr><th>' + m + '</th>';
+    for(let n = 0; n <= 5; n++){
+      const r = (m < 4 || n === 0) ? ack(m, n, 3e6) : {v: null};
+      h += r.v === null ? '<td class="mal">—</td>' : "<td>" + fmt(r.v) + "<small>" + fmt(r.c) + " passos</small></td>";
+    }
+    h += "</tr>";
+  }
+  $("ack-grade").innerHTML = h;
+})();
+$("ack-ir").click();
+
+/* ================= conjunto gerado ================= */
+$("ger-ir").onclick = () => {
+  const t = Math.max(1, parseInt($("ger-t").value, 10) || 1);
+  const pai = new Map([[1, null]]), fila = [1];
+  let geradas = 1;
+  while(fila.length){
+    const x = fila.shift();
+    for(const [y, rot] of [[2 * x, "2x"], [3 * x + 1, "3x+1"]]){
+      if(y <= t && !pai.has(y)){ pai.set(y, [x, rot]); fila.push(y); geradas++; }
+    }
+  }
+  if(pai.has(t)){
+    const cam = []; let x = t;
+    while(pai.get(x)){ const [p, r] = pai.get(x); cam.unshift(p + " →(" + r + ")"); x = p; }
+    $("ger-val").innerHTML = '<span class="ok">sim</span>';
+    $("ger-est").innerHTML = t === 1 ? "É a própria semente." : "Caminho: " + esc(cam.join(" ")) + " " + t + ". Foram gerados " + geradas + " elementos que não passam de " + t + ".";
+  } else {
+    $("ger-val").innerHTML = '<span class="mal">não</span>';
+    $("ger-est").innerHTML = "Os " + geradas + " elementos que não passam de " + t + " foram todos gerados, e " + t + " não está entre eles. Como nada diminui, nenhum elemento maior pode levar a ele.";
+  }
+};
+$("ger-ir").click();
+
+/* ================= Collatz ================= */
+$("col-ir").onclick = () => {
+  let n;
+  try { n = BigInt(String($("col-n").value).trim() || "1"); } catch(e){ n = 1n; }
+  if(n < 1n) n = 1n;
+  const ini = n, traj = [n]; let pico = n, passos = 0;
+  while(n !== 1n && passos < 100000){ n = n % 2n === 0n ? n / 2n : 3n * n + 1n; traj.push(n); if(n > pico) pico = n; passos++; }
+  $("col-val").innerHTML = n === 1n ? passos + (passos === 1 ? " passo" : " passos") : '<span class="am">mais de 100.000 passos</span>';
+  $("col-est").innerHTML = "Partindo de " + fmt(ini) + ", o maior valor atingido foi " + fmt(pico) + ". O gráfico mostra a trajetória em escala logarítmica.";
+  const L = traj.map(x => Math.log(Number(x)) ), mx = Math.max(...L, 1), W = 600, H = 120;
+  const d = L.map((y, i) => (i ? "L" : "M") + (traj.length > 1 ? i * W / (traj.length - 1) : 0).toFixed(1) + " " + (H - 6 - y / mx * (H - 12)).toFixed(1)).join(" ");
+  $("col-svg").innerHTML = '<line x1="0" y1="' + (H - 6) + '" x2="' + W + '" y2="' + (H - 6) + '"/><path d="' + d + '"/>';
+};
+$("col-ir").click();
+document.querySelectorAll(".esquema, .m, .form, .grade-ack th, td.fo").forEach(el => { if(!el.closest("#for-def, #mu-def")) realcar(el); });
+})();
+</script>
+</body>
+</html>
